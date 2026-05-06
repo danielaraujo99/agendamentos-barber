@@ -89,7 +89,7 @@ const StoreCustomers = () => {
         <h2 className="text-xl sm:text-2xl font-black">Clientes</h2>
         <button onClick={() => setEditing({})}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold"
-          style={{ background: "hsl(280 70% 60%)", color: "white" }}>
+          style={{ background: "hsl(245 60% 55%)", color: "white" }}>
           <Plus className="w-4 h-4" /> Novo cliente
         </button>
       </div>
@@ -159,7 +159,7 @@ const StoreCustomers = () => {
             <textarea className="glass-input" placeholder="Observações" rows={3} value={editing.notes || ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} />
             <div className="flex gap-2 justify-end">
               <button onClick={() => setEditing(null)} className="px-4 py-2 rounded-xl text-sm" style={{ background: t.btnGhostBg }}>Cancelar</button>
-              <button onClick={save} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: "hsl(280 70% 60%)" }}>Salvar</button>
+              <button onClick={save} className="px-4 py-2 rounded-xl text-sm font-semibold text-white" style={{ background: "hsl(245 60% 55%)" }}>Salvar</button>
             </div>
           </div>
         </div>
