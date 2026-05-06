@@ -4,8 +4,6 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "./theme/tokens.css";
-
 @layer base {
   :root {
     --background: 230 20% 7%;
