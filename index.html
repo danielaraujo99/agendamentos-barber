@@ -26,6 +26,18 @@
     <meta name="twitter:image" content="https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/1932e546-9d7a-4e6d-b7a5-557ff6dc4308/id-preview-f7a13d5a--3ce954a7-c07b-43f8-bb35-b44fca18e78a.lovable.app-1775770644850.png">
   </head>
   <body>
+    <script>
+      // Apply user theme before React mounts to prevent flash
+      (function() {
+        try {
+          var t = localStorage.getItem('lovable.userTheme') || 'dark-premium';
+          document.documentElement.dataset.theme = t;
+          if (t === 'light-clean' || t === 'soft-beauty') {
+            document.documentElement.classList.add('light-theme');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

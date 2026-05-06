@@ -4,6 +4,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { UserThemeProvider } from "@/contexts/UserThemeContext";
+import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -87,8 +89,10 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ThemeProvider>
-          <Suspense fallback={<PageLoader />}>
-            <Routes>
+          <UserThemeProvider>
+            <Suspense fallback={<PageLoader />}>
+              <ThemeSwitcher />
+              <Routes>
               {/* Main site (eager) */}
               <Route path="/" element={<HostnameResolver fallback={<VilaNova />} />} />
 
@@ -210,8 +214,9 @@ const App = () => (
               <Route path="/vilanova/membro" element={<MemberArea />} />
 
               <Route path="*" element={<NotFound />} />
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </UserThemeProvider>
         </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>
