@@ -7,11 +7,11 @@ import {
 import { useThemeColors } from "@/hooks/useThemeColors";
 import { clearStorePanelSession, getStorePanelSession } from "@/lib/storePanelSession";
 
-const ACCENT = "hsl(280 70% 60%)";
-const ACCENT_LIGHT = "hsl(280 70% 70%)";
-const ACCENT_BG = "hsl(280 70% 60% / 0.1)";
-const ACCENT_BORDER = "hsl(280 70% 60% / 0.15)";
-const ACCENT_BORDER_STRONG = "hsl(280 70% 60% / 0.3)";
+const ACCENT = "hsl(245 60% 55%)";
+const ACCENT_LIGHT = "hsl(245 60% 70%)";
+const ACCENT_BG = "hsl(245 60% 55% / 0.1)";
+const ACCENT_BORDER = "hsl(245 60% 55% / 0.15)";
+const ACCENT_BORDER_STRONG = "hsl(245 60% 55% / 0.3)";
 
 interface NavItem { label: string; path: string; icon: typeof LayoutDashboard; permKey?: string; }
 
@@ -60,16 +60,16 @@ const StoreAdminLayout = () => {
   const currentLabel = navItems.find((i) => i.path === location.pathname)?.label || "Loja";
 
   return (
-    <div className="min-h-screen flex overflow-x-hidden" style={{ background: t.pageBgAlt }}>
+    <div className="h-[100dvh] flex overflow-hidden" style={{ background: t.pageBgAlt }}>
       {sidebarOpen && (
         <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
       <aside
-        className={`fixed lg:sticky top-0 left-0 z-50 h-[100dvh] w-[86vw] max-w-[300px] lg:w-64 lg:max-w-none flex flex-col transition-transform duration-200 lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
+        className={`fixed lg:relative top-0 left-0 z-50 h-[100dvh] w-[86vw] max-w-[300px] lg:w-64 lg:max-w-none flex flex-col transition-transform duration-200 lg:translate-x-0 shrink-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}
         style={{ background: t.sidebarBg, borderRight: `1px solid ${t.border}` }}
       >
-        <div className="p-5 flex items-center justify-between" style={{ borderBottom: `1px solid ${t.border}` }}>
+        <div className="p-5 flex items-center justify-between shrink-0" style={{ borderBottom: `1px solid ${t.border}` }}>
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-lg flex items-center justify-center"
               style={{ background: ACCENT_BG, border: `1px solid ${ACCENT_BORDER_STRONG}` }}>
@@ -97,7 +97,7 @@ const StoreAdminLayout = () => {
           })}
         </nav>
 
-        <div className="p-3" style={{ borderTop: `1px solid ${t.border}` }}>
+        <div className="p-3 shrink-0" style={{ borderTop: `1px solid ${t.border}` }}>
           <button onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-destructive transition-all"
             style={{ border: "1px solid transparent" }}>
@@ -106,8 +106,8 @@ const StoreAdminLayout = () => {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="sticky top-0 z-30 flex items-center gap-3 px-4 sm:px-6 py-4"
+      <div className="flex-1 flex flex-col min-w-0 h-[100dvh] overflow-hidden">
+        <header className="shrink-0 flex items-center gap-3 px-4 sm:px-6 py-4"
           style={{ background: t.headerBg, backdropFilter: "blur(12px)", borderBottom: `1px solid ${t.border}` }}>
           <button className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5 text-foreground" />
@@ -121,7 +121,7 @@ const StoreAdminLayout = () => {
           </span>
         </header>
 
-        <main className="admin-mobile-stable flex-1 p-4 sm:p-6 overflow-auto">
+        <main className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6">
           <Outlet />
         </main>
       </div>
