@@ -50,7 +50,7 @@ const StoreFinance = () => {
           ].map((p) => (
             <button key={p.k} onClick={() => setPeriod(p.k as any)}
               className="px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
-              style={{ background: period === p.k ? "hsl(280 70% 60%)" : "transparent", color: period === p.k ? "white" : t.textSecondary }}>
+              style={{ background: period === p.k ? "hsl(245 60% 55%)" : "transparent", color: period === p.k ? "white" : t.textSecondary }}>
               {p.l}
             </button>
           ))}
@@ -61,7 +61,7 @@ const StoreFinance = () => {
         <div className="rounded-2xl p-4" style={{ background: t.cardBg, border: `1px solid ${t.border}`, boxShadow: t.cardShadow }}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs uppercase tracking-wider opacity-60">Total Vendido</span>
-            <DollarSign className="w-4 h-4" style={{ color: "hsl(280 70% 60%)" }} />
+            <DollarSign className="w-4 h-4" style={{ color: "hsl(245 60% 55%)" }} />
           </div>
           <p className="text-2xl font-black">R$ {total.toFixed(2)}</p>
           <p className="text-xs opacity-60 mt-1">{filtered.length} pedidos</p>

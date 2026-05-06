@@ -60,7 +60,7 @@ const StoreSettings = () => {
           ))}
           <button onClick={save}
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold text-white"
-            style={{ background: "hsl(280 70% 60%)" }}>
+            style={{ background: "hsl(245 60% 55%)" }}>
             <Save className="w-4 h-4" /> Salvar configurações
           </button>
         </div>
