@@ -1173,6 +1173,174 @@ export type Database = {
         }
         Relationships: []
       }
+      store_customers: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          last_order_at: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          total_orders: number
+          total_spent: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_order_at?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          total_orders?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          last_order_at?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          total_orders?: number
+          total_spent?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_inventory_movements: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string | null
+          qty: number
+          reason: string | null
+          supplier_id: string | null
+          type: string
+          unit_cost: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          qty: number
+          reason?: string | null
+          supplier_id?: string | null
+          type: string
+          unit_cost?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string | null
+          qty?: number
+          reason?: string | null
+          supplier_id?: string | null
+          type?: string
+          unit_cost?: number | null
+        }
+        Relationships: []
+      }
+      store_panel_users: {
+        Row: {
+          active: boolean
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          password_hash: string
+          permissions: Json
+          role: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          password_hash: string
+          permissions?: Json
+          role?: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          password_hash?: string
+          permissions?: Json
+          role?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      store_settings: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          updated_at: string
+          value: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          updated_at?: string
+          value?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          updated_at?: string
+          value?: string | null
+        }
+        Relationships: []
+      }
+      store_suppliers: {
+        Row: {
+          active: boolean
+          contact: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          contact?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       suppliers: {
         Row: {
           active: boolean
@@ -1306,6 +1474,17 @@ export type Database = {
         Returns: {
           active: boolean
           barber_id: string
+          email: string
+          full_name: string
+          id: string
+          permissions: Json
+          role: string
+        }[]
+      }
+      verify_store_panel_login: {
+        Args: { _email: string; _plain: string }
+        Returns: {
+          active: boolean
           email: string
           full_name: string
           id: string
