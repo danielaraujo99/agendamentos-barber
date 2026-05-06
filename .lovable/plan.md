@@ -1,117 +1,71 @@
-## Objetivo
-1. **Remover** os 3 temas (Dark Premium / Light Clean / Soft Beauty) e o ThemeSwitcher (FAB) — manter apenas o tema escuro original do projeto.
-2. **Aprimorar a Loja pública** (`/loja`): mais performática, estruturada e profissional.
-3. **Criar painel administrativo dedicado da Loja** em `/loja/admin` com login próprio, sidebar própria, ícone de sacolinha (clone visual do admin de barbearia).
-4. **Isolar dados** em namespace `store_*` para não conflitar com o sistema de barbearia.
+## Reorganização do Admin da Loja (`/loja/admin`)
 
----
+### Problemas atuais
+1. **Tema roxo/rosa** no layout (`hsl(280 70% 60%)`) — destoa do admin original (que usa indigo `hsl(245 60% 55%)`).
+2. **Dashboard** simples, sem gráficos, visual inferior ao `/admin`.
+3. **Páginas faltando**: Produtos, Categorias, Pedidos e Estoque/Financeiro reaproveitam de forma errada (rotas `products`, `categories`, `orders` apontam todas para `StoreDashboard` que tem tabs internas — gera UX confusa, scroll duplo, header genérico).
+4. **Layout do scroll**: hoje o `<aside>` é `sticky` mas o `main` está dentro de um wrapper com `overflow-auto` próprio — em algumas resoluções todo o conteúdo desce junto. Precisa garantir que **só o painel direito role**, sidebar 100% fixa.
 
-## Parte 1 — Remover Theme System (rápido, cirúrgico)
+### Mudanças propostas (apenas no painel da loja — nada toca o `/admin` de barbearia)
 
-Arquivos a remover/limpar:
-- `src/components/ThemeSwitcher.tsx` → deletar
-- `src/contexts/UserThemeContext.tsx` → deletar
-- `src/theme/themes.ts` → deletar
-- `src/theme/tokens.css` → deletar
-- `src/App.tsx` → remover `<UserThemeProvider>` e `<ThemeSwitcher />`
-- `index.html` → remover script anti-flash inline
-- `src/index.css` → remover import de `tokens.css` e reverter overrides para os valores literais HSL originais
-- `src/hooks/useThemeColors.ts` → reverter para versão simples (sem listener `themechange`)
+#### 1. Tema — remover roxo, voltar ao padrão indigo
+- Em `src/components/store-admin/StoreAdminLayout.tsx`: trocar constantes `ACCENT/ACCENT_LIGHT/ACCENT_BG/...` para o mesmo indigo do admin (`hsl(245 60% 55%)` / `hsl(245 60% 70%)`).
+- Manter apenas o **ícone `ShoppingBag`** como diferenciação visual (já existe).
+- Em todas as páginas `src/pages/store-admin/*` substituir referências `hsl(280 70% 60%)` por `hsl(245 60% 55%)`.
 
-**Mantém intacto** o `ThemeContext.tsx` legado (admin light/dark por área) — já existia antes.
+#### 2. Layout — scroll independente
+- Estrutura final em `StoreAdminLayout.tsx`:
+  - Wrapper raiz: `h-screen flex overflow-hidden`
+  - `<aside>` desktop: `h-screen` fixo, sem rolagem na área externa (interno pode rolar via `overflow-y-auto` no `<nav>`).
+  - Container direito: `flex-1 flex flex-col overflow-hidden`, com `<header sticky>` + `<main className="flex-1 overflow-y-auto">`.
+- Resultado: só o `<main>` rola; sidebar e header permanecem fixos.
 
----
+#### 3. Dashboard da loja — refazer no padrão do `/admin`
+Reescrever `src/pages/store-admin/StoreDashboard.tsx` espelhando `Dashboard.tsx` do admin:
+- 4 stat cards (Vendas Hoje, Pedidos Hoje, Ticket Médio, Clientes) com `glass-card`, ícone colorido e `framer-motion`.
+- 2 gráficos `AreaChart` (recharts): **Vendas (14 dias)** e **Pedidos (14 dias)** com gradiente.
+- Card **Top Produtos do Mês** (mantém lógica atual mas com visual `glass-card`).
+- Card **Distribuição por Categoria** com barrinhas percentuais (mesmo padrão do admin).
+- Mantém leitura de `orders` + `order_items` + `products` + `store_customers`.
 
-## Parte 2 — Loja pública aprimorada (`/loja`)
+#### 4. Criar páginas que faltam (cada uma com header próprio, scroll só no main)
+Criar arquivos novos em `src/pages/store-admin/`:
 
-Foco em performance e estrutura sem bagunçar layout existente:
+- **`StoreProducts.tsx`** — CRUD completo de produtos da loja. Reaproveita lógica de `src/pages/admin/Products.tsx` mas como página standalone (sem tabs externas), visual `glass-card`. Lista, busca, filtro por categoria, criar/editar/excluir, upload de imagem, gerenciar galeria, estoque, preço, destaque.
+- **`StoreCategories.tsx`** — CRUD de `product_categories` (label, slug, ícone, ordem, ativa). Espelha `src/pages/admin/Categories.tsx` adaptado.
+- **`StoreOrders.tsx`** — Gestão de pedidos: lista com filtros (status, data, busca), detalhes do pedido (itens, endereço, valor), atualizar status (pending → confirmed → paid → delivered → completed/cancelled), envio de WhatsApp. Espelha `src/pages/admin/Orders.tsx`.
+- **`StoreCoupons.tsx`** — CRUD de cupons. Espelha `src/pages/admin/Coupons.tsx`.
 
-- **Lazy-load de imagens** (`loading="lazy"`, `decoding="async"`) em ProductCard
-- **Virtualização leve**: paginação client-side em blocos de 12 produtos com botão "Ver mais"
-- **Skeleton loaders** ao carregar produtos
-- **Filtro por categoria** (chips no topo) ligado a `product_categories`
-- **Busca com debounce** 200ms
-- **Ordenação**: relevância, menor preço, maior preço, mais novos
-- **Cache** de produtos via `react-query` (já existe no projeto) com `staleTime: 60s`
-- **Memoização** de cards (`React.memo`) para evitar re-render do grid inteiro
-- Manter glass-cards, layout, cores e CartDrawer atuais
+#### 5. Refazer páginas existentes (visual e organização)
+- **`StoreInventory.tsx`** — manter funcionalidade, padronizar visual com `glass-card`, header "Estoque" com botão "Nova Movimentação", grid de estoque baixo destacado, tabela de movimentações limpa. Trocar accent.
+- **`StoreFinance.tsx`** — ampliar: cards (Receita, Pedidos, Ticket Médio, Crescimento), gráfico de vendas no período (filtro dia/semana/mês como em `Finance.tsx`), top produtos, distribuição por método de pagamento. Visual no padrão `glass-card`.
+- **`StoreSuppliers.tsx`** e **`StoreCustomers.tsx`** — manter, só trocar accent e padronizar header.
+- **`StoreSettings.tsx`** — manter, trocar accent.
 
----
-
-## Parte 3 — Painel `/loja/admin` (separado e profissional)
-
-### 3.1 Rota e estrutura
+#### 6. Rotas em `src/App.tsx`
+Substituir as rotas atuais por dedicadas:
+```text
+/loja/admin              → StoreAdminDashboard (novo)
+/loja/admin/products     → StoreProducts (novo)
+/loja/admin/categories   → StoreCategories (novo)
+/loja/admin/orders       → StoreOrders (novo)
+/loja/admin/inventory    → StoreInventory (refeito)
+/loja/admin/suppliers    → StoreSuppliers
+/loja/admin/customers    → StoreCustomers
+/loja/admin/coupons      → StoreCoupons (novo)
+/loja/admin/finance      → StoreFinance (refeito)
+/loja/admin/reviews      → ProductReviews (mantém)
+/loja/admin/whatsapp     → WhatsAppProviders (mantém)
+/loja/admin/settings     → StoreSettings
 ```
-/loja/admin/login        → StoreAdminLogin
-/loja/admin              → StoreDashboard (KPIs)
-/loja/admin/products     → Produtos
-/loja/admin/categories   → Categorias
-/loja/admin/inventory    → Estoque (entradas/saídas, alertas mín)
-/loja/admin/suppliers    → Fornecedores
-/loja/admin/customers    → Clientes (extraídos de orders + tabela própria)
-/loja/admin/orders       → Pedidos
-/loja/admin/coupons      → Cupons
-/loja/admin/finance      → Financeiro da loja (vendas, ticket médio, lucro)
-/loja/admin/reviews      → Avaliações de produtos
-/loja/admin/whatsapp     → Notificações WhatsApp (ChatPro/Render — reuso)
-/loja/admin/settings     → Config loja (frete, pix, entrega, horários)
-```
+Cada uma renderiza dentro do `<main>` rolável.
 
-### 3.2 Componentes novos
-- `src/components/store-admin/StoreAdminLayout.tsx` — sidebar com ícone `ShoppingBag` no topo (cor accent diferente: roxo/violeta para distinguir do admin de barbearia que usa indigo)
-- `src/pages/store-admin/StoreAdminLogin.tsx` — login clone do AdminLogin com ícone sacolinha
-- `src/pages/store-admin/StoreDashboard.tsx` — KPIs (vendas hoje/mês, ticket médio, top produtos, estoque baixo)
-- `src/pages/store-admin/Customers.tsx` — lista de clientes com histórico
-- `src/pages/store-admin/StoreInventory.tsx` — movimentações de estoque
-- `src/pages/store-admin/StoreFinance.tsx` — financeiro exclusivo da loja
-- `src/pages/store-admin/StoreSuppliers.tsx` — reuso da lógica de Suppliers atual
-- Reuso direto: `Products`, `Categories`, `Orders`, `ProductReviews`, `Coupons`, `WhatsAppProviders`/`WhatsAppTemplates`
+### Detalhes técnicos
+- **Stack**: nada novo — React, Tailwind, framer-motion, recharts, supabase client, lucide-react.
+- **Cores**: usar `useThemeColors()` para `cardBg`, `border`, `textPrimary` etc. Accent indigo via constante local nas páginas.
+- **Sem alteração de schema** no banco. Apenas leituras/escritas nas tabelas existentes (`orders`, `order_items`, `products`, `product_categories`, `coupons`, `store_*`).
+- **Sem mexer** em `/admin`, `AdminLayout.tsx`, páginas do admin de barbearia, ou outras rotas públicas.
 
-### 3.3 Autenticação
-- Reaproveita `panel_users` com nova role `store_admin` (e permissões específicas da loja)
-- Sessão separada em localStorage com chave `lovable.storePanelSession`
-- Guard `StoreAdminGuard` redireciona para `/loja/admin/login` se sem sessão
-- Super admin do sistema também tem acesso
-
----
-
-## Parte 4 — Isolamento de dados
-
-Novas tabelas (namespace `store_`):
-- `store_customers` — id, name, phone, email, total_orders, total_spent, last_order_at, notes
-- `store_inventory_movements` — id, product_id, type (in/out/adjust), qty, unit_cost, supplier_id?, reason, created_at
-- `store_suppliers` — clone leve de `suppliers` mas exclusivo da loja (separa do uso da barbearia)
-- `store_settings` — key/value para config exclusiva (pix_key, frete_modo, frete_valor, raio_entrega, horario_funcionamento)
-- `store_panel_users` — usuários do painel da loja (espelha `panel_users` mas separado)
-
-RLS:
-- Todas com `has_role(auth.uid(), 'admin')` para super-admin
-- Função `verify_store_panel_login(email, plain)` — espelho de `verify_panel_login`
-
-**Não toco** nas tabelas `products`, `product_categories`, `orders`, `order_items`, `coupons`, `product_reviews` — continuam compartilhadas (são da loja por natureza).
-
----
-
-## Detalhes técnicos
-
-- **Lazy loading de rotas** com `React.lazy` + `Suspense` (igual admin atual)
-- **Pré-carregamento** em idle de chunks mais usados
-- **Sidebar 100% responsiva** (drawer mobile, igual admin de barbearia)
-- **Ícone identificador**: `ShoppingBag` lucide com cor `hsl(280 70% 60%)` (violeta) vs barbearia `hsl(245 60% 55%)` (indigo) — diferenciação sutil
-- **Sem mudanças** em rotas/admin de barbearia atual
-
-## Riscos / pontos de atenção
-- Migração cria 5 tabelas + 1 função → revisar antes
-- Login da loja usa estrutura paralela: super-admin de sistema (email cadastrado) entra direto sem precisar de senha de loja
-- Não bagunça: zero alteração em arquivos do `/admin` atual
-
-## Etapas de execução
-1. Migration SQL (criar tabelas + função)
-2. Remover Theme System (8 arquivos)
-3. Criar layout + login + guard da loja-admin
-4. Criar páginas (Dashboard, Customers, Inventory, Suppliers, Finance, Settings)
-5. Adicionar rotas em `App.tsx` (com lazy)
-6. Aprimorar `/loja` pública (perf + filtros)
-7. Verificar build
-
-Aprovar para executar?
+### Riscos
+- Reaproveitamento de lógica de `Products`/`Categories`/`Orders`/`Coupons`: vou criar versões standalone (sem depender do tab system de `StoreDashboard`) para isolar e evitar regressões no admin antigo.
+- Trabalho grande em volume de arquivos (~10 criados/editados), mas sem mudanças estruturais ou em camada de dados.
