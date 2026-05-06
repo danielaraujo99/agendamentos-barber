@@ -80,6 +80,15 @@ const PageLoader = () => (
   </div>
 );
 
+const StoreAdminLogin = lazy(() => import("./pages/store-admin/StoreAdminLogin"));
+const StoreAdminLayout = lazy(() => import("./components/store-admin/StoreAdminLayout"));
+const StoreAdminDashboard = lazy(() => import("./pages/store-admin/StoreDashboard"));
+const StoreAdminCustomers = lazy(() => import("./pages/store-admin/StoreCustomers"));
+const StoreAdminInventory = lazy(() => import("./pages/store-admin/StoreInventory"));
+const StoreAdminSuppliers = lazy(() => import("./pages/store-admin/StoreSuppliers"));
+const StoreAdminFinance = lazy(() => import("./pages/store-admin/StoreFinance"));
+const StoreAdminSettings = lazy(() => import("./pages/store-admin/StoreSettings"));
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -87,10 +96,8 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ThemeProvider>
-          <UserThemeProvider>
-            <Suspense fallback={<PageLoader />}>
-              <ThemeSwitcher />
-              <Routes>
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
               {/* Main site (eager) */}
               <Route path="/" element={<HostnameResolver fallback={<VilaNova />} />} />
 
@@ -103,14 +110,6 @@ const App = () => (
               <Route path="/portifolio/preview/membro" element={<MemberPreviewDemo />} />
               <Route path="/portfolio/preview/membro" element={<MemberPreviewDemo />} />
 
-              {/*
-                Rotas globais (sem slug) sob HostnameResolver em modo wrapper:
-                - Quando o hostname É um custom_domain/subdomain, herdam o tenant
-                  e ficam dentro de TenantSiteProvider (dados vêm do MySQL daquela
-                  barbearia, idêntico a /s/<slug>/agenda etc.).
-                - Quando NÃO é (preview lovable.app, localhost, dev), funcionam
-                  como rotas globais como antes.
-              */}
               <Route element={<HostnameResolver mode="wrapper" />}>
                 <Route path="/agenda" element={<Index />} />
                 <Route path="/agenda-direto" element={<AgendaDireto />} />
@@ -121,10 +120,25 @@ const App = () => (
                 <Route path="/avaliar-pedido/:token" element={<AvaliarPedido />} />
               </Route>
 
-              {/* Site público por barbearia (mesmo projeto, mesmas páginas, sob o slug) */}
+              {/* Loja Admin (totalmente separado do admin de barbearia) */}
+              <Route path="/loja/admin/login" element={<StoreAdminLogin />} />
+              <Route path="/loja/admin" element={<StoreAdminLayout />}>
+                <Route index element={<StoreAdminDashboard />} />
+                <Route path="products" element={<StoreDashboard />} />
+                <Route path="categories" element={<StoreDashboard />} />
+                <Route path="orders" element={<StoreDashboard />} />
+                <Route path="reviews" element={<ProductReviews />} />
+                <Route path="coupons" element={<Coupons />} />
+                <Route path="inventory" element={<StoreAdminInventory />} />
+                <Route path="suppliers" element={<StoreAdminSuppliers />} />
+                <Route path="customers" element={<StoreAdminCustomers />} />
+                <Route path="finance" element={<StoreAdminFinance />} />
+                <Route path="whatsapp" element={<WhatsAppProviders />} />
+                <Route path="settings" element={<StoreAdminSettings />} />
+              </Route>
+
+              {/* Site público por barbearia */}
               <Route path="/s/:slug" element={<TenantResolver />}>
-                {/* index NÃO declarado: TenantResolver renderiza VilaNova (full) ou Index (booking)
-                    diretamente quando a rota é a raiz, em vez de delegar ao Outlet. */}
                 <Route path="agenda" element={<Index />} />
                 <Route path="loja" element={<StorePage />} />
                 <Route path="avaliacao" element={<Avaliacao />} />
@@ -159,16 +173,10 @@ const App = () => (
                   <Route path="users" element={<UsersAdmin />} />
                   <Route path="settings" element={<Settings />} />
                 </Route>
-                {/* Legado da preview minimalista, mantido como rota oculta */}
                 <Route path="preview" element={<TenantSite />} />
                 <Route path="preview/agenda" element={<TenantBooking />} />
               </Route>
 
-              {/*
-                Login do cliente, área do membro e admin globais — também
-                envoltos pelo HostnameResolver para herdarem o tenant em
-                domínios customizados.
-              */}
               <Route element={<HostnameResolver mode="wrapper" />}>
                 <Route element={<LoginRedirectGuard />}>
                   <Route path="/login" element={<MemberLogin />} />
@@ -212,9 +220,8 @@ const App = () => (
               <Route path="/vilanova/membro" element={<MemberArea />} />
 
               <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </UserThemeProvider>
+            </Routes>
+          </Suspense>
         </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>
