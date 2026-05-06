@@ -1,11 +1,16 @@
 import { useState } from "react";
 import { Palette, Check, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useLocation } from "react-router-dom";
 import { useUserTheme } from "@/contexts/UserThemeContext";
 
 const ThemeSwitcher = () => {
   const { theme, setTheme, themes } = useUserTheme();
   const [open, setOpen] = useState(false);
+  const location = useLocation();
+
+  // Hide on admin routes — admin uses tenant config
+  if (location.pathname.includes("/admin")) return null;
 
   return (
     <>
