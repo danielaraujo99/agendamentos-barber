@@ -82,6 +82,17 @@ const StorePage = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const applyStoreSettings = (sm: Record<string, string>, fallback: Record<string, string>) => {
+    const enabledRaw = sm.store_enabled ?? fallback.store_enabled;
+    setStoreEnabled(enabledRaw !== "false");
+    setStoreOrderMode(((sm.store_order_mode || fallback.store_order_mode) as any) || "whatsapp");
+    setWhatsappNumber(sm.store_whatsapp_number || fallback.whatsapp_number || "");
+    setPixKey(sm.store_pix_key || fallback.pix_key || "");
+    setPixType(sm.store_pix_type || fallback.pix_type || "cpf");
+    const name = (sm.store_business_name || "").trim() || fallback.business_name || "Sua Loja";
+    setBusinessName(name);
+  };
+
   useEffect(() => {
     const fetchAll = async () => {
       const [productsRes, settingsRes, catsRes, storeSettingsRes] = await Promise.all([
@@ -91,7 +102,8 @@ const StorePage = () => {
         supabase.from("business_settings").select("key,value")
           .in("key", ["store_enabled","store_order_mode","whatsapp_number","pix_key","pix_type","business_name"]),
         (supabase as any).from("product_categories").select("slug,label,icon,sort_order").eq("active", true).order("sort_order"),
-        (supabase as any).from("store_settings").select("key,value").in("key", ["store_business_name"]),
+        (supabase as any).from("store_settings").select("key,value")
+          .in("key", ["store_business_name","store_enabled","store_order_mode","store_whatsapp_number","store_pix_key","store_pix_type"]),
       ]);
       if (productsRes.data) setProducts(productsRes.data as DBProduct[]);
       if (catsRes?.data) {
@@ -99,27 +111,33 @@ const StorePage = () => {
         for (const c of catsRes.data as any[]) m[c.slug] = { label: c.label, sort: c.sort_order, icon: c.icon };
         setCategoryMap(m);
       }
-      if (settingsRes.data) {
-        const map: Record<string, string> = {};
-        for (const row of settingsRes.data) map[row.key] = row.value || "";
-        setStoreEnabled(map.store_enabled !== "false");
-        setStoreOrderMode((map.store_order_mode as any) || "whatsapp");
-        setWhatsappNumber(map.whatsapp_number || "");
-        setPixKey(map.pix_key || "");
-        setPixType(map.pix_type || "cpf");
-        if (map.business_name) setBusinessName(map.business_name);
-      }
-      // Override com nome próprio da loja (store_business_name) se existir
-      if (storeSettingsRes?.data) {
-        const sm: Record<string, string> = {};
-        for (const row of storeSettingsRes.data as any[]) sm[row.key] = row.value || "";
-        if (sm.store_business_name && sm.store_business_name.trim()) {
-          setBusinessName(sm.store_business_name.trim());
-        }
-      }
+      const fallback: Record<string, string> = {};
+      for (const row of settingsRes.data || []) fallback[row.key] = row.value || "";
+      const sm: Record<string, string> = {};
+      for (const row of (storeSettingsRes?.data || []) as any[]) sm[row.key] = row.value || "";
+      applyStoreSettings(sm, fallback);
       setLoading(false);
     };
     fetchAll();
+
+    // Realtime: refletir mudanças do admin imediatamente
+    const ch = supabase
+      .channel("store_settings_public")
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, async () => {
+        const [storeSettingsRes, settingsRes] = await Promise.all([
+          (supabase as any).from("store_settings").select("key,value")
+            .in("key", ["store_business_name","store_enabled","store_order_mode","store_whatsapp_number","store_pix_key","store_pix_type"]),
+          supabase.from("business_settings").select("key,value")
+            .in("key", ["store_enabled","store_order_mode","whatsapp_number","pix_key","pix_type","business_name"]),
+        ]);
+        const fb: Record<string, string> = {};
+        for (const r of settingsRes.data || []) fb[r.key] = r.value || "";
+        const m: Record<string, string> = {};
+        for (const r of (storeSettingsRes?.data || []) as any[]) m[r.key] = r.value || "";
+        applyStoreSettings(m, fb);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
   }, []);
 
   // Título independente da loja (não herda da barbearia)
