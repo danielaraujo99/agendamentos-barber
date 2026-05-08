@@ -28,6 +28,15 @@ const SECTIONS: Section[] = [
     key: "general", label: "Geral", icon: Store,
     description: "Identificação e funcionamento da loja.",
     fields: [
+      { key: "store_enabled", label: "Loja ativa", type: "switch", hint: "Quando desligada, a vitrine /loja exibe aviso de loja indisponível.", cols: 2 },
+      {
+        key: "store_order_mode", label: "Modo de pedido", type: "segmented", cols: 2,
+        hint: "Como o cliente envia o pedido na loja pública.",
+        options: [
+          { value: "ifood", label: "Carrinho (similar iFood)" },
+          { value: "whatsapp", label: "Direto no WhatsApp" },
+        ],
+      },
       { key: "store_business_name", label: "Nome da loja", hint: "Aparece no topo, no título da aba e nos pedidos.", placeholder: "Ex.: Sua Loja", cols: 2 },
       { key: "store_address", label: "Endereço completo", placeholder: "Rua, número, bairro, cidade", cols: 2 },
       { key: "store_open_hours", label: "Horário de funcionamento", placeholder: "Seg-Sáb 09:00–18:00" },
@@ -38,9 +47,9 @@ const SECTIONS: Section[] = [
     key: "payment", label: "PIX & Pagamento", icon: CreditCard,
     description: "Configure como seus clientes pagam.",
     fields: [
-      { key: "store_pix_key", label: "Chave PIX", hint: "CPF, e-mail, telefone ou chave aleatória.", placeholder: "Sua chave PIX" },
+      { key: "store_pix_key", label: "Chave PIX", hint: "CPF, e-mail, telefone ou chave aleatória.", placeholder: "Sua chave PIX", cols: 2 },
       {
-        key: "store_pix_type", label: "Tipo da chave PIX", type: "segmented",
+        key: "store_pix_type", label: "Tipo da chave PIX", type: "segmented", cols: 2,
         options: [
           { value: "cpf", label: "CPF" }, { value: "email", label: "E-mail" },
           { value: "phone", label: "Telefone" }, { value: "random", label: "Aleatória" },
@@ -69,8 +78,8 @@ const SECTIONS: Section[] = [
     key: "promo", label: "Promoção", icon: Megaphone,
     description: "Modal de boas-vindas exibido ao entrar em /loja.",
     fields: [
-      { key: "promo_modal_enabled", label: "Exibir modal de promoção", type: "switch", hint: "Aparece 1x por sessão." },
-      { key: "promo_modal_icon", label: "Ícone do modal", type: "icon" },
+      { key: "promo_modal_enabled", label: "Exibir modal de promoção", type: "switch", hint: "Aparece 1x por sessão.", cols: 2 },
+      { key: "promo_modal_icon", label: "Ícone do modal", type: "icon", cols: 2 },
       { key: "promo_modal_title", label: "Título", placeholder: "Promoção da semana", cols: 2 },
       { key: "promo_modal_subtitle", label: "Descrição", type: "textarea", placeholder: "Frete grátis em compras acima de R$ 99…", cols: 2 },
       { key: "promo_modal_cta", label: "Texto do botão", placeholder: "Aproveitar agora" },
@@ -340,7 +349,8 @@ const Label = ({ field }: { field: Field }) => (
 const VisualPanel = ({ theme, setTheme, accent, t }: any) => {
   const themes: { key: StoreThemeName; label: string; description: string; colors: string[] }[] = [
     { key: "default", label: "Indigo (padrão)", description: "Identidade clássica do app.", colors: ["#0a0a1a", "#1e1e5a", "#4f46e5", "#a78bfa"] },
-    { key: "pink-dark", label: "Rosa Dark", description: "Estética premium para a loja.", colors: ["#0d0d12", "#3a1530", "#e91e63", "#ff7ab8"] },
+    { key: "pink-dark", label: "Rosa Dark", description: "Estética premium para a loja, fundo escuro.", colors: ["#0d0d12", "#3a1530", "#e91e63", "#ff7ab8"] },
+    { key: "pink-light", label: "Rosa Light", description: "Modo claro com acentos rosa, leve e moderno.", colors: ["#fff5f9", "#ffd6e7", "#e91e63", "#ad1457"] },
   ];
   return (
     <div className="rounded-2xl overflow-hidden"
@@ -354,7 +364,7 @@ const VisualPanel = ({ theme, setTheme, accent, t }: any) => {
           </div>
         </div>
       </div>
-      <div className="p-6 grid sm:grid-cols-2 gap-4">
+      <div className="p-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {themes.map((opt) => {
           const isActive = theme === opt.key;
           return (
