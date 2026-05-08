@@ -28,6 +28,15 @@ const SECTIONS: Section[] = [
     key: "general", label: "Geral", icon: Store,
     description: "Identificação e funcionamento da loja.",
     fields: [
+      { key: "store_enabled", label: "Loja ativa", type: "switch", hint: "Quando desligada, a vitrine /loja exibe aviso de loja indisponível.", cols: 2 },
+      {
+        key: "store_order_mode", label: "Modo de pedido", type: "segmented", cols: 2,
+        hint: "Como o cliente envia o pedido na loja pública.",
+        options: [
+          { value: "ifood", label: "Carrinho (similar iFood)" },
+          { value: "whatsapp", label: "Direto no WhatsApp" },
+        ],
+      },
       { key: "store_business_name", label: "Nome da loja", hint: "Aparece no topo, no título da aba e nos pedidos.", placeholder: "Ex.: Sua Loja", cols: 2 },
       { key: "store_address", label: "Endereço completo", placeholder: "Rua, número, bairro, cidade", cols: 2 },
       { key: "store_open_hours", label: "Horário de funcionamento", placeholder: "Seg-Sáb 09:00–18:00" },
@@ -38,9 +47,9 @@ const SECTIONS: Section[] = [
     key: "payment", label: "PIX & Pagamento", icon: CreditCard,
     description: "Configure como seus clientes pagam.",
     fields: [
-      { key: "store_pix_key", label: "Chave PIX", hint: "CPF, e-mail, telefone ou chave aleatória.", placeholder: "Sua chave PIX" },
+      { key: "store_pix_key", label: "Chave PIX", hint: "CPF, e-mail, telefone ou chave aleatória.", placeholder: "Sua chave PIX", cols: 2 },
       {
-        key: "store_pix_type", label: "Tipo da chave PIX", type: "segmented",
+        key: "store_pix_type", label: "Tipo da chave PIX", type: "segmented", cols: 2,
         options: [
           { value: "cpf", label: "CPF" }, { value: "email", label: "E-mail" },
           { value: "phone", label: "Telefone" }, { value: "random", label: "Aleatória" },
@@ -69,8 +78,8 @@ const SECTIONS: Section[] = [
     key: "promo", label: "Promoção", icon: Megaphone,
     description: "Modal de boas-vindas exibido ao entrar em /loja.",
     fields: [
-      { key: "promo_modal_enabled", label: "Exibir modal de promoção", type: "switch", hint: "Aparece 1x por sessão." },
-      { key: "promo_modal_icon", label: "Ícone do modal", type: "icon" },
+      { key: "promo_modal_enabled", label: "Exibir modal de promoção", type: "switch", hint: "Aparece 1x por sessão.", cols: 2 },
+      { key: "promo_modal_icon", label: "Ícone do modal", type: "icon", cols: 2 },
       { key: "promo_modal_title", label: "Título", placeholder: "Promoção da semana", cols: 2 },
       { key: "promo_modal_subtitle", label: "Descrição", type: "textarea", placeholder: "Frete grátis em compras acima de R$ 99…", cols: 2 },
       { key: "promo_modal_cta", label: "Texto do botão", placeholder: "Aproveitar agora" },
