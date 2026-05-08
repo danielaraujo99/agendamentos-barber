@@ -101,6 +101,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ThemeProvider>
+          <StoreThemeProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Main site (eager) */}
