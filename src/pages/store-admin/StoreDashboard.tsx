@@ -7,9 +7,9 @@ import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer } from "rec
 import { supabase } from "@/integrations/supabase/client";
 import { useThemeColors } from "@/hooks/useThemeColors";
 
-const ACCENT = "hsl(245 60% 55%)";
+const ACCENT = "hsl(var(--store-accent))";
 const COLORS = [
-  "hsl(245 60% 55%)",
+  "hsl(var(--store-accent))",
   "hsl(200 70% 50%)",
   "hsl(160 60% 45%)",
   "hsl(280 60% 55%)",
@@ -189,7 +189,7 @@ const StoreDashboard = () => {
                   style={{ background: t.cardBgSubtle, border: `1px solid ${t.borderSubtle}` }}>
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0"
-                      style={{ background: "hsl(245 60% 55% / 0.12)", color: ACCENT }}>{i + 1}</span>
+                      style={{ background: "hsl(var(--store-accent-soft))", color: ACCENT }}>{i + 1}</span>
                     <span className="text-sm font-semibold truncate">{p.title}</span>
                   </div>
                   <div className="flex items-center gap-3 text-xs shrink-0">
