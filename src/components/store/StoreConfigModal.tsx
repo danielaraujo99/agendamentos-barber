@@ -45,7 +45,7 @@ const StoreConfigModal = ({ onClose, onModeSelected, currentMode }: StoreConfigM
         onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Settings className="w-5 h-5" style={{ color: "hsl(245 60% 65%)" }} />
+            <Settings className="w-5 h-5" style={{ color: "hsl(var(--store-accent-light))" }} />
             <h2 className="text-base font-bold text-foreground">Modo de Pedido</h2>
           </div>
           <button onClick={onClose}><X className="w-5 h-5 text-muted-foreground" /></button>
@@ -58,19 +58,19 @@ const StoreConfigModal = ({ onClose, onModeSelected, currentMode }: StoreConfigM
             <button key={mode.id} onClick={() => setSelectedMode(mode.id)}
               className="w-full text-left p-4 rounded-xl transition-all"
               style={{
-                background: selectedMode === mode.id ? "hsl(245 60% 55% / 0.1)" : "hsl(0 0% 100% / 0.03)",
-                border: `1.5px solid ${selectedMode === mode.id ? "hsl(245 60% 55% / 0.4)" : "hsl(0 0% 100% / 0.08)"}`,
+                background: selectedMode === mode.id ? "hsl(var(--store-accent-soft))" : "hsl(0 0% 100% / 0.03)",
+                border: `1.5px solid ${selectedMode === mode.id ? "hsl(var(--store-accent-border))" : "hsl(0 0% 100% / 0.08)"}`,
               }}>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                  style={{ background: selectedMode === mode.id ? "hsl(245 60% 55% / 0.2)" : "hsl(0 0% 100% / 0.05)" }}>
-                  <mode.icon className="w-5 h-5" style={{ color: selectedMode === mode.id ? "hsl(245 60% 70%)" : "hsl(0 0% 50%)" }} />
+                  style={{ background: selectedMode === mode.id ? "hsl(var(--store-accent-soft))" : "hsl(0 0% 100% / 0.05)" }}>
+                  <mode.icon className="w-5 h-5" style={{ color: selectedMode === mode.id ? "hsl(var(--store-accent-light))" : "hsl(0 0% 50%)" }} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-foreground">{mode.title}</h3>
                 </div>
                 {selectedMode === mode.id && (
-                  <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "hsl(245 60% 55%)" }}>
+                  <div className="ml-auto w-5 h-5 rounded-full flex items-center justify-center" style={{ background: "hsl(var(--store-accent))" }}>
                     <ChevronRight className="w-3 h-3 text-white" />
                   </div>
                 )}
@@ -90,7 +90,7 @@ const StoreConfigModal = ({ onClose, onModeSelected, currentMode }: StoreConfigM
 
         <button onClick={handleConfirm}
           className="w-full py-3 rounded-xl font-semibold text-sm transition-all"
-          style={{ background: "hsl(245 60% 55%)", color: "white" }}>
+          style={{ background: "hsl(var(--store-accent))", color: "white" }}>
           Confirmar Modo
         </button>
       </motion.div>
