@@ -138,7 +138,7 @@ const StoreSettings = () => {
     <div className="flex flex-col h-full min-h-0">
       {/* Header sticky com Salvar */}
       <div className="flex items-center justify-between gap-3 pb-4 border-b sticky top-0 z-10 backdrop-blur-md"
-        style={{ borderColor: t.border, background: `${t.surface}cc` }}>
+        style={{ borderColor: t.border, background: t.pageBg }}>
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
             style={{ background: "hsl(var(--store-accent-soft))", border: `1px solid hsl(var(--store-accent-border))` }}>
