@@ -349,7 +349,8 @@ const Label = ({ field }: { field: Field }) => (
 const VisualPanel = ({ theme, setTheme, accent, t }: any) => {
   const themes: { key: StoreThemeName; label: string; description: string; colors: string[] }[] = [
     { key: "default", label: "Indigo (padrão)", description: "Identidade clássica do app.", colors: ["#0a0a1a", "#1e1e5a", "#4f46e5", "#a78bfa"] },
-    { key: "pink-dark", label: "Rosa Dark", description: "Estética premium para a loja.", colors: ["#0d0d12", "#3a1530", "#e91e63", "#ff7ab8"] },
+    { key: "pink-dark", label: "Rosa Dark", description: "Estética premium para a loja, fundo escuro.", colors: ["#0d0d12", "#3a1530", "#e91e63", "#ff7ab8"] },
+    { key: "pink-light", label: "Rosa Light", description: "Modo claro com acentos rosa, leve e moderno.", colors: ["#fff5f9", "#ffd6e7", "#e91e63", "#ad1457"] },
   ];
   return (
     <div className="rounded-2xl overflow-hidden"
@@ -363,7 +364,7 @@ const VisualPanel = ({ theme, setTheme, accent, t }: any) => {
           </div>
         </div>
       </div>
-      <div className="p-6 grid sm:grid-cols-2 gap-4">
+      <div className="p-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {themes.map((opt) => {
           const isActive = theme === opt.key;
           return (
