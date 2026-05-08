@@ -8,10 +8,10 @@ import { useThemeColors } from "@/hooks/useThemeColors";
 import { setStorePanelSession, clearStorePanelSession } from "@/lib/storePanelSession";
 import { isSuperAdmin } from "@/lib/superAdmin";
 
-const ACCENT = "hsl(245 60% 55%)";
-const ACCENT_LIGHT = "hsl(245 60% 70%)";
-const ACCENT_BG = "hsl(245 60% 55% / 0.1)";
-const ACCENT_BORDER = "hsl(245 60% 55% / 0.2)";
+const ACCENT = "hsl(var(--store-accent))";
+const ACCENT_LIGHT = "hsl(var(--store-accent-light))";
+const ACCENT_BG = "hsl(var(--store-accent-soft))";
+const ACCENT_BORDER = "hsl(var(--store-accent-border))";
 
 const StoreAdminLogin = () => {
   const t = useThemeColors();

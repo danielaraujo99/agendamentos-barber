@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { StoreThemeProvider } from "@/contexts/StoreThemeContext";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 
@@ -100,6 +101,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ThemeProvider>
+          <StoreThemeProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
               {/* Main site (eager) */}
@@ -226,6 +228,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
+          </StoreThemeProvider>
         </ThemeProvider>
       </BrowserRouter>
     </TooltipProvider>

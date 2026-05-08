@@ -50,6 +50,24 @@
     --glass-border: 0 0% 100% / 0.08;
     --whatsapp: 142 70% 40%;
     --whatsapp-foreground: 0 0% 100%;
+
+    /* ═══════ STORE THEME TOKENS (default = indigo) ═══════ */
+    --store-accent: 245 60% 55%;
+    --store-accent-light: 245 60% 70%;
+    --store-accent-soft: 245 60% 55% / 0.12;
+    --store-accent-border: 245 60% 55% / 0.25;
+    --store-accent-strong: 245 60% 45%;
+  }
+
+  /* ═══════ STORE THEME — PINK DARK ═══════
+     Aplicado quando <html data-store-theme="pink-dark">.
+     Apenas nas rotas /loja* (controlado por StoreThemeContext). */
+  :root[data-store-theme="pink-dark"] {
+    --store-accent: 330 80% 60%;
+    --store-accent-light: 330 85% 72%;
+    --store-accent-soft: 330 80% 60% / 0.14;
+    --store-accent-border: 330 80% 60% / 0.30;
+    --store-accent-strong: 330 80% 50%;
   }
 
   /* ═══════ LIGHT THEME ═══════ */

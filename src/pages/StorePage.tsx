@@ -17,6 +17,7 @@ const AuthRequiredModal = lazy(() => import("@/components/store/AuthRequiredModa
 const ProductDetailModal = lazy(() => import("@/components/store/ProductDetailModal"));
 const CartDrawer = lazy(() => import("@/components/store/CartDrawer"));
 const AccountInline = lazy(() => import("@/components/store/AccountInline"));
+const PromoModal = lazy(() => import("@/components/store/PromoModal"));
 
 interface DBProduct {
   id: string; title: string; description: string | null; price: number;
@@ -111,6 +112,13 @@ const StorePage = () => {
     };
     fetchAll();
   }, []);
+
+  // Título independente da loja (não herda da barbearia)
+  useEffect(() => {
+    const previous = document.title;
+    document.title = `${businessName} — Loja Online`;
+    return () => { document.title = previous; };
+  }, [businessName]);
 
   const categoryOptions = useMemo(() => {
     const keys = Array.from(new Set(products.map((p) => (p.category || "geral").toLowerCase())));
@@ -602,6 +610,8 @@ const StorePage = () => {
           )}
         </AnimatePresence>
       </Suspense>
+
+      <Suspense fallback={null}><PromoModal /></Suspense>
     </div>
   );
 };
