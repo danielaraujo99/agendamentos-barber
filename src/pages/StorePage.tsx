@@ -109,6 +109,14 @@ const StorePage = () => {
         setPixType(map.pix_type || "cpf");
         if (map.business_name) setBusinessName(map.business_name);
       }
+      // Override com nome próprio da loja (store_business_name) se existir
+      if (storeSettingsRes?.data) {
+        const sm: Record<string, string> = {};
+        for (const row of storeSettingsRes.data as any[]) sm[row.key] = row.value || "";
+        if (sm.store_business_name && sm.store_business_name.trim()) {
+          setBusinessName(sm.store_business_name.trim());
+        }
+      }
       setLoading(false);
     };
     fetchAll();
