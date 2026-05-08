@@ -7,11 +7,11 @@ import {
 import { useThemeColors } from "@/hooks/useThemeColors";
 import { clearStorePanelSession, getStorePanelSession } from "@/lib/storePanelSession";
 
-const ACCENT = "hsl(245 60% 55%)";
-const ACCENT_LIGHT = "hsl(245 60% 70%)";
-const ACCENT_BG = "hsl(245 60% 55% / 0.1)";
-const ACCENT_BORDER = "hsl(245 60% 55% / 0.15)";
-const ACCENT_BORDER_STRONG = "hsl(245 60% 55% / 0.3)";
+const ACCENT = "hsl(var(--store-accent))";
+const ACCENT_LIGHT = "hsl(var(--store-accent-light))";
+const ACCENT_BG = "hsl(var(--store-accent-soft))";
+const ACCENT_BORDER = "hsl(var(--store-accent-border))";
+const ACCENT_BORDER_STRONG = "hsl(var(--store-accent-border))";
 
 interface NavItem { label: string; path: string; icon: typeof LayoutDashboard; permKey?: string; }
 

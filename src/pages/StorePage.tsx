@@ -610,6 +610,8 @@ const StorePage = () => {
           )}
         </AnimatePresence>
       </Suspense>
+
+      <Suspense fallback={null}><PromoModal /></Suspense>
     </div>
   );
 };
