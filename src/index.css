@@ -59,15 +59,60 @@
     --store-accent-strong: 245 60% 45%;
   }
 
-  /* ═══════ STORE THEME — PINK DARK ═══════
-     Aplicado quando <html data-store-theme="pink-dark">.
-     Apenas nas rotas /loja* (controlado por StoreThemeContext). */
+  /* ═══════ STORE THEME — PINK DARK ═══════ */
   :root[data-store-theme="pink-dark"] {
     --store-accent: 330 80% 60%;
     --store-accent-light: 330 85% 72%;
     --store-accent-soft: 330 80% 60% / 0.14;
     --store-accent-border: 330 80% 60% / 0.30;
     --store-accent-strong: 330 80% 50%;
+  }
+
+  /* ═══════ STORE THEME — PINK LIGHT ═══════
+     Combina com .light-theme aplicada no <html> pelo StoreThemeContext.
+     Ajusta tokens base com leve tom rosado e atualiza o accent. */
+  :root[data-store-theme="pink-light"] {
+    --store-accent: 335 75% 55%;
+    --store-accent-light: 335 80% 68%;
+    --store-accent-soft: 335 75% 55% / 0.10;
+    --store-accent-border: 335 75% 55% / 0.28;
+    --store-accent-strong: 335 75% 45%;
+  }
+  html[data-store-theme="pink-light"].light-theme,
+  .light-theme[data-store-theme="pink-light"] {
+    --background: 340 40% 98%;
+    --foreground: 335 30% 14%;
+    --card: 0 0% 100%;
+    --card-foreground: 335 30% 14%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 335 30% 14%;
+    --primary: 335 75% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 335 35% 95%;
+    --secondary-foreground: 335 30% 25%;
+    --muted: 335 25% 95%;
+    --muted-foreground: 335 15% 42%;
+    --accent: 335 75% 55%;
+    --accent-foreground: 0 0% 100%;
+    --border: 335 30% 88%;
+    --input: 335 30% 92%;
+    --ring: 335 75% 55%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 335 30% 14%;
+    --sidebar-primary: 335 75% 55%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 335 35% 96%;
+    --sidebar-accent-foreground: 335 30% 14%;
+    --sidebar-border: 335 30% 88%;
+    --sidebar-ring: 335 75% 55%;
+    --glass: 335 30% 100% / 0.6;
+    --glass-border: 335 30% 88%;
+  }
+  html[data-store-theme="pink-light"].light-theme body {
+    background: hsl(340 40% 98%);
+    background-image:
+      radial-gradient(ellipse 80% 60% at 50% -10%, hsl(335 75% 55% / 0.06), transparent),
+      radial-gradient(ellipse 50% 40% at 80% 100%, hsl(335 75% 55% / 0.04), transparent);
   }
 
   /* ═══════ LIGHT THEME ═══════ */
