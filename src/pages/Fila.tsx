@@ -72,6 +72,7 @@ const Fila = () => {
   const [userProfile, setUserProfile] = useState<{ name: string; phone: string } | null>(null);
   const [, setTick] = useState(0);
   const [howOpen, setHowOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
 
   const push = useWebPush(userId);
 
