@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Bell, Play, CheckCircle2, XCircle, UserX, Loader2, Trash2, Phone, MessageSquare, Clock,
+  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -49,11 +50,28 @@ const statusLabel: Record<WaitStatus, string> = {
   no_show: "Faltou",
 };
 
+const sendPush = async (user_ids: string[], title: string, body: string) => {
+  if (!user_ids.length) return;
+  try {
+    await supabase.functions.invoke("send-push", { body: { user_ids, title, body, link: "/fila", tag: "queue" } });
+  } catch (e) { console.error("push", e); }
+};
+
 const AdminFila = () => {
   const [entries, setEntries] = useState<Entry[]>([]);
   const [history, setHistory] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [tick, setTick] = useState(0);
+
+  const [settings, setSettings] = useState<Record<string, string>>({});
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [savingSettings, setSavingSettings] = useState(false);
+  const [form, setForm] = useState({
+    site_status: "ativo",
+    queue_info_message: "",
+    queue_closed_message: "",
+    queue_how_to_use: "",
+  });
 
   const fetchAll = async () => {
     const { data: activeData } = await supabase
@@ -72,8 +90,22 @@ const AdminFila = () => {
     setLoading(false);
   };
 
+  const fetchSettings = async () => {
+    const { data } = await supabase.from("business_settings").select("key,value");
+    const map: Record<string, string> = {};
+    (data || []).forEach((r: any) => { map[r.key] = r.value || ""; });
+    setSettings(map);
+    setForm({
+      site_status: map.site_status || "ativo",
+      queue_info_message: map.queue_info_message || "",
+      queue_closed_message: map.queue_closed_message || "",
+      queue_how_to_use: map.queue_how_to_use || "",
+    });
+  };
+
   useEffect(() => {
     fetchAll();
+    fetchSettings();
     const ch = supabase
       .channel("waitlist-admin")
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist_entries" }, () => fetchAll())
@@ -90,16 +122,26 @@ const AdminFila = () => {
   const waiting = useMemo(() => entries.filter((e) => e.status === "waiting"), [entries]);
   const active = useMemo(() => entries.filter((e) => e.status === "calling" || e.status === "in_service"), [entries]);
   const nextEntry = waiting[0];
+  const isOpen = (settings.site_status || "ativo") !== "inativo";
 
   const updateStatus = async (id: string, patch: Partial<Entry>) => {
     const { error } = await supabase.from("waitlist_entries").update(patch).eq("id", id);
     if (error) toast.error("Erro ao atualizar.");
   };
 
-  const callNext = async () => {
+  const callEntry = async (e: Entry) => {
+    await updateStatus(e.id, { status: "calling", called_at: new Date().toISOString() });
+    sendPush([e.user_id], "É a sua vez! 💈", `${e.user_name.split(" ")[0]}, o barbeiro está te chamando.`);
+    // avisa o próximo depois dele também
+    const idx = waiting.findIndex((w) => w.id === e.id);
+    const after = waiting[idx + 1];
+    if (after) sendPush([after.user_id], "Você é o próximo", "Prepare-se, sua vez está chegando.");
+    toast.success(`Chamando ${e.user_name}`);
+  };
+
+  const callNext = () => {
     if (!nextEntry) return toast.info("Fila vazia.");
-    await updateStatus(nextEntry.id, { status: "calling", called_at: new Date().toISOString() });
-    toast.success(`Chamando ${nextEntry.user_name}`);
+    callEntry(nextEntry);
   };
 
   const startService = (e: Entry) =>
@@ -127,6 +169,25 @@ const AdminFila = () => {
     window.open(`https://wa.me/55${digits}?text=${encodeURIComponent("Sua vez chegou na barbearia! 💈")}`, "_blank");
   };
 
+  const toggleOpen = async () => {
+    const next = isOpen ? "inativo" : "ativo";
+    const { error } = await supabase.from("business_settings").upsert({ key: "site_status", value: next }, { onConflict: "key" });
+    if (error) return toast.error("Erro ao alternar status.");
+    setSettings((s) => ({ ...s, site_status: next }));
+    toast.success(next === "ativo" ? "Barbearia aberta." : "Barbearia fechada.");
+  };
+
+  const saveSettings = async () => {
+    setSavingSettings(true);
+    const rows = Object.entries(form).map(([key, value]) => ({ key, value }));
+    const { error } = await supabase.from("business_settings").upsert(rows, { onConflict: "key" });
+    setSavingSettings(false);
+    if (error) return toast.error("Erro ao salvar.");
+    toast.success("Configurações salvas.");
+    setSettings((s) => ({ ...s, ...form }));
+    setSettingsOpen(false);
+  };
+
   return (
     <div className="p-4 sm:p-6 max-w-6xl mx-auto text-white">
       {/* Header */}
@@ -137,17 +198,36 @@ const AdminFila = () => {
             Fila de espera
           </h1>
           <p className="text-sm text-white/60 mt-1">
-            Gerencie a fila em tempo real. A ordem é sempre respeitada.
+            A fila avança automaticamente. Ao concluir/cancelar, o próximo é chamado sozinho.
           </p>
         </div>
-        <button
-          onClick={callNext}
-          disabled={!nextEntry}
-          className="inline-flex items-center gap-2 h-11 px-5 rounded-xl font-semibold text-black bg-gradient-to-br from-amber-300 to-amber-500 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 transition-all"
-        >
-          <Bell className="w-4 h-4" />
-          Chamar próximo {nextEntry ? `(${nextEntry.user_name.split(" ")[0]})` : ""}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={toggleOpen}
+            className={`inline-flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold border transition-colors ${
+              isOpen
+                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
+                : "border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/15"
+            }`}
+          >
+            {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
+            {isOpen ? "Barbearia aberta" : "Barbearia fechada"}
+          </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-medium border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-white/80 transition-colors"
+          >
+            <SettingsIcon className="w-4 h-4" /> Configurações
+          </button>
+          <button
+            onClick={callNext}
+            disabled={!nextEntry}
+            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl font-semibold text-black bg-gradient-to-br from-amber-300 to-amber-500 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 transition-all"
+          >
+            <Bell className="w-4 h-4" />
+            Chamar próximo {nextEntry ? `(${nextEntry.user_name.split(" ")[0]})` : ""}
+          </button>
+        </div>
       </div>
 
       {/* KPIs */}
@@ -172,10 +252,7 @@ const AdminFila = () => {
           </div>
           <div className="space-y-2">
             {active.map((e) => (
-              <div
-                key={e.id}
-                className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-              >
+              <div key={e.id} className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold">{e.user_name}</span>
@@ -227,14 +304,8 @@ const AdminFila = () => {
           <div className="space-y-2">
             <AnimatePresence initial={false}>
               {waiting.map((e, i) => (
-                <motion.div
-                  key={e.id}
-                  layout
-                  initial={{ opacity: 0, y: 6 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -6 }}
-                  className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-                >
+                <motion.div key={e.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                  className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col sm:flex-row sm:items-center gap-3">
                   <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-bold tabular-nums bg-white/5 border border-white/10">
                     {i + 1}
                   </div>
@@ -248,10 +319,7 @@ const AdminFila = () => {
                     {e.notes && <div className="text-xs text-white/40 mt-1 italic">"{e.notes}"</div>}
                   </div>
                   <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <button
-                      onClick={() => updateStatus(e.id, { status: "calling", called_at: new Date().toISOString() })}
-                      className="btn-mini-primary"
-                    >
+                    <button onClick={() => callEntry(e)} className="btn-mini-primary">
                       <Bell className="w-3.5 h-3.5" /> Chamar
                     </button>
                     <button onClick={() => cancel(e)} className="btn-mini-danger">
@@ -271,9 +339,7 @@ const AdminFila = () => {
       {/* Histórico */}
       {history.length > 0 && (
         <div className="mt-8">
-          <div className="text-[11px] uppercase tracking-wider text-white/40 px-1 mb-2">
-            Histórico recente
-          </div>
+          <div className="text-[11px] uppercase tracking-wider text-white/40 px-1 mb-2">Histórico recente</div>
           <div className="space-y-1">
             {history.map((e) => (
               <div key={e.id} className="flex items-center gap-3 rounded-xl px-3 py-2 border border-white/5 bg-white/[0.01] text-sm">
@@ -284,11 +350,7 @@ const AdminFila = () => {
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusBadge[e.status]}`}>
                   {statusLabel[e.status]}
                 </span>
-                <button
-                  onClick={() => remove(e.id)}
-                  className="text-white/30 hover:text-red-300 transition-colors"
-                  title="Remover"
-                >
+                <button onClick={() => remove(e.id)} className="text-white/30 hover:text-red-300 transition-colors" title="Remover">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -297,38 +359,95 @@ const AdminFila = () => {
         </div>
       )}
 
+      {/* Settings modal */}
+      <AnimatePresence>
+        {settingsOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-md"
+            onClick={() => !savingSettings && setSettingsOpen(false)}>
+            <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full sm:max-w-lg bg-[hsl(220_25%_6%)] border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col">
+              <div className="flex items-center justify-between px-5 h-14 border-b border-white/5">
+                <div className="flex items-center gap-2">
+                  <SettingsIcon className="w-4 h-4 text-amber-300" />
+                  <div className="text-sm font-bold">Configurações da fila</div>
+                </div>
+                <button onClick={() => setSettingsOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="p-5 overflow-y-auto space-y-5">
+                {/* Toggle */}
+                <div className="flex items-center justify-between gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.02]">
+                  <div>
+                    <div className="text-sm font-bold">Status da barbearia</div>
+                    <div className="text-xs text-white/50 mt-0.5">Quando fechada, novos clientes não conseguem entrar na fila.</div>
+                  </div>
+                  <button
+                    onClick={() => setForm((f) => ({ ...f, site_status: f.site_status === "ativo" ? "inativo" : "ativo" }))}
+                    className={`shrink-0 h-9 px-4 rounded-lg text-xs font-bold border transition-colors ${
+                      form.site_status === "ativo"
+                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
+                        : "border-red-500/30 bg-red-500/10 text-red-200"
+                    }`}
+                  >
+                    {form.site_status === "ativo" ? "Aberta" : "Fechada"}
+                  </button>
+                </div>
+
+                <Field label="Mensagem informativa (aparece sempre na tela de fila)"
+                  hint="Ex: Fila on-line disponível apenas quando estiver atendendo na barbearia.">
+                  <textarea rows={3} value={form.queue_info_message}
+                    onChange={(e) => setForm({ ...form, queue_info_message: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                </Field>
+
+                <Field label="Mensagem quando fechado"
+                  hint="Aparece apenas quando a barbearia está com status Fechada.">
+                  <textarea rows={3} value={form.queue_closed_message}
+                    onChange={(e) => setForm({ ...form, queue_closed_message: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                </Field>
+
+                <Field label="Como usar esta página"
+                  hint="Texto explicativo que aparece expansível para os clientes.">
+                  <textarea rows={4} value={form.queue_how_to_use}
+                    onChange={(e) => setForm({ ...form, queue_how_to_use: e.target.value })}
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                </Field>
+              </div>
+
+              <div className="p-5 border-t border-white/5">
+                <button onClick={saveSettings} disabled={savingSettings}
+                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                  {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : (<><Save className="w-4 h-4" /> Salvar configurações</>)}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <style>{`
-        .btn-mini {
-          display: inline-flex; align-items: center; gap: 0.35rem;
-          padding: 0.4rem 0.75rem; border-radius: 0.6rem;
-          font-size: 12px; font-weight: 500;
-          background: hsl(0 0% 100% / 0.04);
-          border: 1px solid hsl(0 0% 100% / 0.1);
-          color: hsl(0 0% 100% / 0.7);
-          transition: all 150ms;
-        }
+        .btn-mini { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 0.6rem; font-size: 12px; font-weight: 500; background: hsl(0 0% 100% / 0.04); border: 1px solid hsl(0 0% 100% / 0.1); color: hsl(0 0% 100% / 0.7); transition: all 150ms; }
         .btn-mini:hover { background: hsl(0 0% 100% / 0.08); color: white; }
-        .btn-mini-primary {
-          display: inline-flex; align-items: center; gap: 0.35rem;
-          padding: 0.4rem 0.85rem; border-radius: 0.6rem;
-          font-size: 12px; font-weight: 600; color: #000;
-          background: linear-gradient(135deg, hsl(38 92% 65%), hsl(38 92% 55%));
-          transition: all 150ms;
-        }
+        .btn-mini-primary { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.85rem; border-radius: 0.6rem; font-size: 12px; font-weight: 600; color: #000; background: linear-gradient(135deg, hsl(38 92% 65%), hsl(38 92% 55%)); transition: all 150ms; }
         .btn-mini-primary:hover { filter: brightness(1.1); }
-        .btn-mini-danger {
-          display: inline-flex; align-items: center; gap: 0.35rem;
-          padding: 0.4rem 0.75rem; border-radius: 0.6rem;
-          font-size: 12px; font-weight: 500;
-          background: hsl(0 70% 55% / 0.1);
-          border: 1px solid hsl(0 70% 55% / 0.3);
-          color: hsl(0 90% 75%);
-          transition: all 150ms;
-        }
+        .btn-mini-danger { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 0.6rem; font-size: 12px; font-weight: 500; background: hsl(0 70% 55% / 0.1); border: 1px solid hsl(0 70% 55% / 0.3); color: hsl(0 90% 75%); transition: all 150ms; }
         .btn-mini-danger:hover { background: hsl(0 70% 55% / 0.2); }
       `}</style>
     </div>
   );
 };
+
+const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
+  <div>
+    <label className="text-[12px] font-semibold text-white/80 block mb-1.5">{label}</label>
+    {hint && <div className="text-[11px] text-white/40 mb-2">{hint}</div>}
+    {children}
+  </div>
+);
 
 export default AdminFila;
