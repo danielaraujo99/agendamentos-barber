@@ -681,6 +681,69 @@ const Fila = () => {
           </ModalShell>
         )}
       </AnimatePresence>
+
+      {/* Serviços disponíveis — bottom sheet */}
+      <AnimatePresence>
+        {servicesOpen && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-md"
+            onClick={() => setServicesOpen(false)}>
+            <motion.div
+              initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 260 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full sm:max-w-lg border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[85vh] flex flex-col"
+              style={{ background: "hsl(220 25% 6% / 0.85)", backdropFilter: "blur(24px)" }}>
+              <div className="flex items-center justify-center pt-2.5 pb-1 sm:hidden">
+                <div className="w-10 h-1 rounded-full bg-white/15" />
+              </div>
+              <div className="flex items-center justify-between px-5 h-14 border-b border-white/5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Scissors className="w-4 h-4 text-amber-300" />
+                  <div className="font-bold truncate">Serviços disponíveis</div>
+                  <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/60 tabular-nums">{services.length}</span>
+                </div>
+                <button onClick={() => setServicesOpen(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="overflow-y-auto p-4 space-y-2 scrollbar-thin" style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(255,255,255,0.15) transparent" }}>
+                {services.length === 0 && (
+                  <div className="text-sm text-white/50 text-center py-10">Nenhum serviço cadastrado.</div>
+                )}
+                {services.map((s) => (
+                  <div key={s.id}
+                    className="flex items-center gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-amber-400/25 bg-amber-400/[0.08] text-amber-300 shrink-0">
+                      <Scissors className="w-4 h-4" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-semibold truncate">{s.title}</div>
+                      {s.duration && (
+                        <div className="text-[11px] text-white/45 mt-0.5 inline-flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {s.duration}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right shrink-0">
+                      <div className="font-bold text-amber-300 tabular-nums">{money(s.price)}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {isOpen && !myEntry && (
+                <div className="p-4 border-t border-white/5">
+                  <button onClick={() => { setServicesOpen(false); openFlow(); }}
+                    className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+                    <Sparkles className="w-4 h-4" /> Entrar na fila
+                  </button>
+                </div>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
