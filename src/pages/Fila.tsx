@@ -388,7 +388,7 @@ const Fila = () => {
         {/* Big status button */}
         {!isOpen ? (
           <button disabled
-            className="w-full h-14 rounded-2xl font-bold text-lg border border-amber-500/25 bg-amber-500/15 text-amber-200/60 opacity-70 cursor-not-allowed">
+            className="w-full h-14 rounded-2xl font-bold text-lg border border-white/10 bg-white/[0.03] text-white/40 cursor-not-allowed">
             Barbearia fechada
           </button>
         ) : myEntry ? (
