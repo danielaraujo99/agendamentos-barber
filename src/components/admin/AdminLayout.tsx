@@ -44,6 +44,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", path: "/admin", icon: LayoutDashboard },
   { label: "Agendamentos", path: "/admin/appointments", icon: CalendarDays },
+  { label: "Fila de espera", path: "/admin/fila", icon: Users },
   { label: "Comandas", path: "/admin/commands", icon: Receipt },
   { label: "Caixa", path: "/admin/cashier", icon: Banknote },
   { label: "Financeiro", path: "/admin/finance", icon: Wallet },

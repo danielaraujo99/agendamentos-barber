@@ -1419,6 +1419,51 @@ export type Database = {
         }
         Relationships: []
       }
+      waitlist_entries: {
+        Row: {
+          called_at: string | null
+          created_at: string
+          finished_at: string | null
+          id: string
+          notes: string | null
+          service_name: string | null
+          started_at: string | null
+          status: string
+          updated_at: string
+          user_id: string
+          user_name: string
+          user_phone: string | null
+        }
+        Insert: {
+          called_at?: string | null
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          notes?: string | null
+          service_name?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+          user_name: string
+          user_phone?: string | null
+        }
+        Update: {
+          called_at?: string | null
+          created_at?: string
+          finished_at?: string | null
+          id?: string
+          notes?: string | null
+          service_name?: string | null
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+          user_name?: string
+          user_phone?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       barbershop_public: {

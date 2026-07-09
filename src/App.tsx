@@ -59,6 +59,8 @@ const Suppliers = lazy(() => import("./pages/admin/Suppliers"));
 const UsersAdmin = lazy(() => import("./pages/admin/Users"));
 const WhatsAppTemplates = lazy(() => import("./pages/admin/WhatsAppTemplates"));
 const GoogleCalendar = lazy(() => import("./pages/admin/GoogleCalendar"));
+const Fila = lazy(() => import("./pages/Fila"));
+const AdminFila = lazy(() => import("./pages/admin/AdminFila"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -120,6 +122,7 @@ const App = () => (
                 <Route path="/agenda" element={<Index />} />
                 <Route path="/agenda-direto" element={<AgendaDireto />} />
                 <Route path="/loja" element={<StorePage />} />
+                <Route path="/fila" element={<Fila />} />
                 <Route path="/navegacao" element={<Navigation />} />
                 <Route path="/demo-site" element={<DemoSite />} />
                 <Route path="/avaliacao" element={<Avaliacao />} />
@@ -163,6 +166,7 @@ const App = () => (
                   <Route path="services" element={<Services />} />
                   <Route path="barbers" element={<Barbers />} />
                   <Route path="appointments" element={<Appointments />} />
+                  <Route path="fila" element={<AdminFila />} />
                   <Route path="coupons" element={<Coupons />} />
                   <Route path="store" element={<StoreDashboard />} />
                   <Route path="confg" element={<WhatsAppProviders />} />
@@ -201,6 +205,7 @@ const App = () => (
                   <Route path="services" element={<Services />} />
                   <Route path="barbers" element={<Barbers />} />
                   <Route path="appointments" element={<Appointments />} />
+                  <Route path="fila" element={<AdminFila />} />
                   <Route path="coupons" element={<Coupons />} />
                   <Route path="store" element={<StoreDashboard />} />
                   <Route path="confg" element={<WhatsAppProviders />} />
