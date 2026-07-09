@@ -295,7 +295,7 @@ const Fila = () => {
             ) : (
               <button
                 onClick={openAuthOnly}
-                className="h-11 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 border-2 border-amber-400/70 bg-amber-400/[0.08] hover:bg-amber-400/[0.14] text-amber-200 transition-colors"
+                className="h-11 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-white/85 transition-colors"
               >
                 <LogIn className="w-4 h-4" /> Entrar na minha conta
               </button>
