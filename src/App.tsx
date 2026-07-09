@@ -122,6 +122,7 @@ const App = () => (
                 <Route path="/agenda" element={<Index />} />
                 <Route path="/agenda-direto" element={<AgendaDireto />} />
                 <Route path="/loja" element={<StorePage />} />
+                <Route path="/fila" element={<Fila />} />
                 <Route path="/navegacao" element={<Navigation />} />
                 <Route path="/demo-site" element={<DemoSite />} />
                 <Route path="/avaliacao" element={<Avaliacao />} />
