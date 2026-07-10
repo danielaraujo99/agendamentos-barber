@@ -903,4 +903,141 @@ const Row = ({ label, value, extra }: { label: string; value: string; extra?: st
   </div>
 );
 
+// ---------- ETA Countdown (baseado em timestamp do servidor) ----------
+const EtaCountdown = ({ endTs, userId, onNotify }: {
+  endTs: number;
+  userId: string | null;
+  onNotify: (kind: "15" | "5" | "0", title: string, body: string) => void;
+}) => {
+  const [now, setNow] = useState(() => Date.now());
+  const firedRef = (globalThis as any).__etaFired || ((globalThis as any).__etaFired = new Set<string>());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const diff = Math.max(0, Math.floor((endTs - now) / 1000));
+  const mm = Math.floor(diff / 60);
+  const ss = diff % 60;
+  const isAlert = diff <= 15 * 60 && diff > 5 * 60;
+  const isNext = diff <= 5 * 60 && diff > 0;
+  const isDue = diff === 0;
+
+  // Notificações nos thresholds
+  useEffect(() => {
+    if (!userId) return;
+    const remaining = Math.floor((endTs - Date.now()) / 1000);
+    const check = (threshold: number, key: string, title: string, body: string) => {
+      const tag = `${userId}-${endTs}-${key}`;
+      if (remaining <= threshold && !firedRef.has(tag)) {
+        firedRef.add(tag);
+        onNotify(key as any, title, body);
+      }
+    };
+    check(15 * 60, "15", "Seu atendimento está se aproximando", "Recomendamos que você vá para a barbearia.");
+    check(5 * 60, "5", "Você será o próximo", "Prepare-se, sua vez está chegando.");
+    check(0, "0", "Sua vez chegou!", "Dirija-se à barbearia agora.");
+  }, [now, endTs, userId]);
+
+  const palette = isDue
+    ? { border: "border-emerald-500/40", bg: "bg-emerald-500/[0.06]", text: "text-emerald-200", num: "text-emerald-200", icon: <CheckCircle2 className="w-4 h-4" /> }
+    : isNext
+      ? { border: "border-red-500/50", bg: "bg-red-500/[0.08]", text: "text-red-200", num: "text-red-300", icon: <AlertTriangle className="w-4 h-4" /> }
+      : isAlert
+        ? { border: "border-red-500/40", bg: "bg-red-500/[0.05]", text: "text-red-200", num: "text-red-300", icon: <AlertTriangle className="w-4 h-4" /> }
+        : { border: "border-[#c69447]/35", bg: "bg-[#c69447]/[0.06]", text: "text-[#e5b877]", num: "text-[#e5b877]", icon: <Timer className="w-4 h-4" /> };
+
+  return (
+    <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      className={`rounded-3xl p-5 border ${palette.border} ${palette.bg} transition-colors`}>
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${palette.border} ${palette.text} bg-black/20`}>
+          {palette.icon}
+          {isDue ? "Sua vez chegou" : isNext ? "Dirija-se para a barbearia" : isAlert ? "Vá para a barbearia agora" : "Prepare-se"}
+        </span>
+      </div>
+      <div className="mt-3 text-sm text-white/70 leading-relaxed">
+        {isDue
+          ? "Sua vez chegou. Aguardando o barbeiro iniciar seu atendimento."
+          : isNext
+            ? "Você será o próximo atendimento."
+            : isAlert
+              ? "Sua vez está chegando. Recomendamos que você vá para a barbearia agora."
+              : "Seu atendimento está se aproximando."}
+      </div>
+      <div className="mt-4 flex items-baseline gap-2">
+        <div className="text-[10px] uppercase tracking-widest text-white/40">Início previsto em</div>
+      </div>
+      <div className={`mt-1 text-5xl font-black tabular-nums tracking-tight ${palette.num}`}>
+        {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+      </div>
+    </motion.div>
+  );
+};
+
+// ---------- Banner PWA de instalação ----------
+const PwaInstallBanner = () => {
+  const [prompt, setPrompt] = useState<any>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+    if (standalone) return;
+
+    const dismissed = Number(localStorage.getItem("pwa_banner_dismissed_at") || 0);
+    const days = (Date.now() - dismissed) / (1000 * 60 * 60 * 24);
+    if (dismissed && days < 7) return;
+
+    const handler = (e: any) => {
+      e.preventDefault();
+      setPrompt(e);
+      setVisible(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const install = async () => {
+    if (!prompt) return;
+    prompt.prompt();
+    await prompt.userChoice;
+    setPrompt(null);
+    setVisible(false);
+  };
+  const dismiss = () => {
+    localStorage.setItem("pwa_banner_dismissed_at", String(Date.now()));
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+  return (
+    <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
+      className="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[440px] z-40">
+      <div className="rounded-2xl border border-white/10 bg-[hsl(220_25%_6%)]/95 backdrop-blur-xl shadow-2xl p-4 flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl bg-[#c69447]/15 border border-[#c69447]/30 flex items-center justify-center shrink-0">
+          <Download className="w-5 h-5 text-[#e5b877]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-bold text-white">Instalar aplicativo</div>
+          <div className="text-[11px] text-white/60 leading-snug mt-0.5">
+            Receba notificações em tempo real e acompanhe sua posição na fila.
+          </div>
+        </div>
+        <button onClick={dismiss}
+          className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5">
+          <X className="w-4 h-4" />
+        </button>
+        <button onClick={install}
+          className="shrink-0 h-9 px-3.5 rounded-lg text-xs font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors">
+          Instalar
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
 export default Fila;
+
