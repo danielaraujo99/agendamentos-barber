@@ -69,6 +69,23 @@ const AdminFila = () => {
     queue_how_to_use: "",
   });
 
+  // Serviços — para configurar a duração média (usado no contador da fila pública)
+  type SvcRow = { id: string; title: string; duration: string | null };
+  const [svcList, setSvcList] = useState<SvcRow[]>([]);
+  const [svcSaving, setSvcSaving] = useState<string | null>(null);
+
+  const fetchServices = async () => {
+    const { data } = await supabase.from("services").select("id,title,duration").eq("active", true).order("sort_order");
+    setSvcList((data || []) as SvcRow[]);
+  };
+  const saveSvcDuration = async (id: string, duration: string) => {
+    setSvcSaving(id);
+    const { error } = await supabase.from("services").update({ duration }).eq("id", id);
+    setSvcSaving(null);
+    if (error) toast.error("Erro ao salvar duração."); else toast.success("Duração atualizada.");
+  };
+
+
   const fetchAll = async () => {
     const { data: activeData } = await supabase
       .from("waitlist_entries").select("*")
