@@ -114,7 +114,7 @@ const AdminFila = () => {
   };
 
   useEffect(() => {
-    fetchAll(); fetchSettings();
+    fetchAll(); fetchSettings(); fetchServices();
     const ch = supabase.channel("waitlist-admin")
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist_entries" }, () => fetchAll())
       .subscribe();
