@@ -21,7 +21,22 @@ interface Entry {
   notes: string | null;
   status: WaitStatus;
   created_at: string;
+  started_at?: string | null;
+  called_at?: string | null;
 }
+
+// gold suave (menos amarelo, mais dourado refinado)
+const GOLD = "#c69447";
+const GOLD_SOFT = "#d4a656";
+const parseMinutes = (txt: string | null | undefined): number => {
+  if (!txt) return 0;
+  const m = String(txt).match(/(\d+)\s*h/i);
+  const s = String(txt).match(/(\d+)\s*m/i);
+  const plain = String(txt).match(/(\d+)/);
+  const hours = m ? parseInt(m[1], 10) : 0;
+  const mins = s ? parseInt(s[1], 10) : (m ? 0 : (plain ? parseInt(plain[1], 10) : 0));
+  return hours * 60 + mins;
+};
 
 interface Service { id: string; title: string; price: number; duration: string | null; }
 interface Barber { id: string; name: string; specialty: string | null; avatar_url: string | null; }
