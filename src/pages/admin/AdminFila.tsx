@@ -287,10 +287,10 @@ const AdminFila = () => {
                     </div>
                     {e.notes && <div className="text-xs text-muted-foreground/70 mt-1 italic">"{e.notes}"</div>}
                   </div>
-                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:justify-end">
                     <MiniBtn primary onClick={() => callEntry(e)}><Bell className="w-3.5 h-3.5" /> Chamar</MiniBtn>
                     <MiniBtn danger onClick={() => cancel(e)}><XCircle className="w-3.5 h-3.5" /> Cancelar</MiniBtn>
-                    <MiniBtn onClick={() => remove(e.id)}><Trash2 className="w-3.5 h-3.5" /></MiniBtn>
+                    <MiniBtn onClick={() => remove(e.id)}><Trash2 className="w-3.5 h-3.5" /> Remover</MiniBtn>
                   </div>
                 </motion.div>
               ))}
