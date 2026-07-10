@@ -340,6 +340,26 @@ const Fila = () => {
           )}
         </motion.div>
 
+        {/* Serviços disponíveis — abre bottom sheet */}
+        <button
+          onClick={() => setServicesOpen(true)}
+          className="w-full flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] px-4 py-3.5 transition-colors text-left"
+        >
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-amber-400/25 bg-amber-400/[0.08] text-amber-300 shrink-0">
+            <Scissors className="w-4 h-4" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-bold text-white">Serviços disponíveis</div>
+            <div className="text-[11px] text-white/50 mt-0.5">Toque para ver preços e durações</div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/25">
+              {services.length}
+            </span>
+            <ChevronRight className="w-4 h-4 text-white/40" />
+          </div>
+        </button>
+
         {/* Info card (custom) */}
         {infoMsg && (
           <div className="rounded-2xl border border-white/10 bg-white/[0.02] px-5 py-4 text-center">
