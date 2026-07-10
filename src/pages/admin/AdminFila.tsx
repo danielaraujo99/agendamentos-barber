@@ -410,8 +410,8 @@ const StatusBadge = ({ status, small }: { status: WaitStatus; small?: boolean })
   );
 };
 
-const MiniBtn = ({ children, onClick, primary, danger }: {
-  children: React.ReactNode; onClick: () => void; primary?: boolean; danger?: boolean;
+const MiniBtn = ({ children, onClick, primary, danger, full }: {
+  children: React.ReactNode; onClick: () => void; primary?: boolean; danger?: boolean; full?: boolean;
 }) => {
   const style = primary
     ? { background: ACCENT, color: "#fff", border: "1px solid transparent" }
@@ -420,7 +420,7 @@ const MiniBtn = ({ children, onClick, primary, danger }: {
       : { background: "hsl(0 0% 100% / 0.04)", color: "hsl(0 0% 75%)", border: "1px solid hsl(0 0% 100% / 0.10)" };
   return (
     <button onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
+      className={`inline-flex items-center justify-center gap-1.5 h-9 sm:h-8 px-3 rounded-lg text-xs font-semibold transition-all hover:brightness-110 w-full ${full ? "col-span-3" : "sm:w-auto"}`}
       style={style}>
       {children}
     </button>
