@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Bell, Play, CheckCircle2, XCircle, UserX, Loader2, Trash2, MessageSquare, Clock,
-  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save, Phone,
+  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save, Phone, Timer,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useThemeColors } from "@/hooks/useThemeColors";
+
 
 type WaitStatus = "waiting" | "calling" | "in_service" | "done" | "cancelled" | "no_show";
 
