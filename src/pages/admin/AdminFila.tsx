@@ -1,53 +1,47 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  Users, Bell, Play, CheckCircle2, XCircle, UserX, Loader2, Trash2, Phone, MessageSquare, Clock,
-  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save,
+  Users, Bell, Play, CheckCircle2, XCircle, UserX, Loader2, Trash2, MessageSquare, Clock,
+  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save, Phone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useThemeColors } from "@/hooks/useThemeColors";
 
 type WaitStatus = "waiting" | "calling" | "in_service" | "done" | "cancelled" | "no_show";
 
 interface Entry {
-  id: string;
-  user_id: string;
-  user_name: string;
-  user_phone: string | null;
-  service_name: string | null;
-  notes: string | null;
-  status: WaitStatus;
-  called_at: string | null;
-  started_at: string | null;
-  finished_at: string | null;
+  id: string; user_id: string; user_name: string; user_phone: string | null;
+  service_name: string | null; notes: string | null; status: WaitStatus;
+  called_at: string | null; started_at: string | null; finished_at: string | null;
   created_at: string;
 }
+
+const ACCENT = "hsl(245 60% 55%)";
+const ACCENT_LIGHT = "hsl(245 60% 70%)";
+const ACCENT_SOFT = "hsl(245 60% 55% / 0.10)";
+const ACCENT_BORDER = "hsl(245 60% 55% / 0.25)";
 
 const formatWait = (createdAt: string) => {
   const mins = Math.max(0, Math.floor((Date.now() - new Date(createdAt).getTime()) / 60000));
   if (mins < 1) return "agora";
   if (mins < 60) return `${mins}min`;
-  const h = Math.floor(mins / 60);
-  const m = mins % 60;
+  const h = Math.floor(mins / 60); const m = mins % 60;
   return `${h}h${m ? `${m}m` : ""}`;
 };
 
-const statusBadge: Record<WaitStatus, string> = {
-  waiting: "bg-amber-500/10 border-amber-500/30 text-amber-300",
-  calling: "bg-emerald-500/10 border-emerald-500/40 text-emerald-300 animate-pulse",
-  in_service: "bg-sky-500/10 border-sky-500/30 text-sky-300",
-  done: "bg-white/5 border-white/10 text-white/50",
-  cancelled: "bg-red-500/10 border-red-500/30 text-red-300",
-  no_show: "bg-orange-500/10 border-orange-500/30 text-orange-300",
+const statusLabel: Record<WaitStatus, string> = {
+  waiting: "Aguardando", calling: "Chamando", in_service: "Atendendo",
+  done: "Concluído", cancelled: "Cancelado", no_show: "Faltou",
 };
 
-const statusLabel: Record<WaitStatus, string> = {
-  waiting: "Aguardando",
-  calling: "Chamando",
-  in_service: "Atendendo",
-  done: "Concluído",
-  cancelled: "Cancelado",
-  no_show: "Faltou",
+const statusTone: Record<WaitStatus, { bg: string; text: string; border: string }> = {
+  waiting: { bg: "hsl(43 90% 55% / 0.08)", text: "hsl(43 90% 70%)", border: "hsl(43 90% 55% / 0.25)" },
+  calling: { bg: "hsl(142 65% 45% / 0.10)", text: "hsl(142 65% 65%)", border: "hsl(142 65% 45% / 0.30)" },
+  in_service: { bg: "hsl(200 85% 55% / 0.08)", text: "hsl(200 85% 70%)", border: "hsl(200 85% 55% / 0.25)" },
+  done: { bg: "hsl(0 0% 100% / 0.04)", text: "hsl(0 0% 60%)", border: "hsl(0 0% 100% / 0.08)" },
+  cancelled: { bg: "hsl(0 70% 55% / 0.08)", text: "hsl(0 80% 72%)", border: "hsl(0 70% 55% / 0.25)" },
+  no_show: { bg: "hsl(25 90% 55% / 0.08)", text: "hsl(25 90% 70%)", border: "hsl(25 90% 55% / 0.25)" },
 };
 
 const sendPush = async (user_ids: string[], title: string, body: string) => {
@@ -58,10 +52,11 @@ const sendPush = async (user_ids: string[], title: string, body: string) => {
 };
 
 const AdminFila = () => {
+  const t = useThemeColors();
   const [entries, setEntries] = useState<Entry[]>([]);
   const [history, setHistory] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tick, setTick] = useState(0);
+  const [, setTick] = useState(0);
 
   const [settings, setSettings] = useState<Record<string, string>>({});
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -75,16 +70,13 @@ const AdminFila = () => {
 
   const fetchAll = async () => {
     const { data: activeData } = await supabase
-      .from("waitlist_entries")
-      .select("*")
+      .from("waitlist_entries").select("*")
       .in("status", ["waiting", "calling", "in_service"])
       .order("created_at", { ascending: true });
     const { data: histData } = await supabase
-      .from("waitlist_entries")
-      .select("*")
+      .from("waitlist_entries").select("*")
       .in("status", ["done", "cancelled", "no_show"])
-      .order("updated_at" as any, { ascending: false })
-      .limit(20);
+      .order("updated_at" as any, { ascending: false }).limit(20);
     setEntries((activeData || []) as Entry[]);
     setHistory((histData || []) as Entry[]);
     setLoading(false);
@@ -104,69 +96,52 @@ const AdminFila = () => {
   };
 
   useEffect(() => {
-    fetchAll();
-    fetchSettings();
-    const ch = supabase
-      .channel("waitlist-admin")
+    fetchAll(); fetchSettings();
+    const ch = supabase.channel("waitlist-admin")
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist_entries" }, () => fetchAll())
       .subscribe();
-    return () => { supabase.removeChannel(ch); };
+    const cs = supabase.channel("settings-admin")
+      .on("postgres_changes", { event: "*", schema: "public", table: "business_settings" }, () => fetchSettings())
+      .subscribe();
+    return () => { supabase.removeChannel(ch); supabase.removeChannel(cs); };
   }, []);
 
   useEffect(() => {
     const t = setInterval(() => setTick((v) => v + 1), 30000);
     return () => clearInterval(t);
   }, []);
-  void tick;
 
   const waiting = useMemo(() => entries.filter((e) => e.status === "waiting"), [entries]);
   const active = useMemo(() => entries.filter((e) => e.status === "calling" || e.status === "in_service"), [entries]);
   const nextEntry = waiting[0];
   const isOpen = (settings.site_status || "ativo") !== "inativo";
 
-  const updateStatus = async (id: string, patch: Partial<Entry>) => {
+  const update = async (id: string, patch: Partial<Entry>) => {
     const { error } = await supabase.from("waitlist_entries").update(patch).eq("id", id);
     if (error) toast.error("Erro ao atualizar.");
   };
 
   const callEntry = async (e: Entry) => {
-    await updateStatus(e.id, { status: "calling", called_at: new Date().toISOString() });
-    sendPush([e.user_id], "É a sua vez! 💈", `${e.user_name.split(" ")[0]}, o barbeiro está te chamando.`);
-    // avisa o próximo depois dele também
+    await update(e.id, { status: "calling", called_at: new Date().toISOString() });
+    sendPush([e.user_id], "É a sua vez!", `${e.user_name.split(" ")[0]}, o barbeiro está te chamando.`);
     const idx = waiting.findIndex((w) => w.id === e.id);
     const after = waiting[idx + 1];
     if (after) sendPush([after.user_id], "Você é o próximo", "Prepare-se, sua vez está chegando.");
     toast.success(`Chamando ${e.user_name}`);
   };
-
-  const callNext = () => {
-    if (!nextEntry) return toast.info("Fila vazia.");
-    callEntry(nextEntry);
-  };
-
-  const startService = (e: Entry) =>
-    updateStatus(e.id, { status: "in_service", started_at: new Date().toISOString() });
-
-  const finish = (e: Entry) =>
-    updateStatus(e.id, { status: "done", finished_at: new Date().toISOString() });
-
-  const markNoShow = (e: Entry) =>
-    updateStatus(e.id, { status: "no_show", finished_at: new Date().toISOString() });
-
-  const cancel = (e: Entry) =>
-    updateStatus(e.id, { status: "cancelled", finished_at: new Date().toISOString() });
-
+  const callNext = () => nextEntry ? callEntry(nextEntry) : toast.info("Fila vazia.");
+  const startService = (e: Entry) => update(e.id, { status: "in_service", started_at: new Date().toISOString() });
+  const finish = (e: Entry) => update(e.id, { status: "done", finished_at: new Date().toISOString() });
+  const markNoShow = (e: Entry) => update(e.id, { status: "no_show", finished_at: new Date().toISOString() });
+  const cancel = (e: Entry) => update(e.id, { status: "cancelled", finished_at: new Date().toISOString() });
   const remove = async (id: string) => {
-    if (!confirm("Remover esta entrada permanentemente?")) return;
+    if (!confirm("Remover permanentemente?")) return;
     const { error } = await supabase.from("waitlist_entries").delete().eq("id", id);
-    if (error) toast.error("Erro ao remover.");
-    else toast.success("Removido.");
+    if (error) toast.error("Erro ao remover."); else toast.success("Removido.");
   };
-
   const openWhats = (phone: string | null) => {
-    if (!phone) return toast.info("Sem telefone cadastrado.");
-    const digits = phone.replace(/\D/g, "");
-    window.open(`https://wa.me/55${digits}?text=${encodeURIComponent("Sua vez chegou na barbearia! 💈")}`, "_blank");
+    if (!phone) return toast.info("Sem telefone.");
+    window.open(`https://wa.me/55${phone.replace(/\D/g, "")}?text=${encodeURIComponent("Sua vez chegou! 💈")}`, "_blank");
   };
 
   const toggleOpen = async () => {
@@ -188,99 +163,87 @@ const AdminFila = () => {
     setSettingsOpen(false);
   };
 
+  const surface = { background: "hsl(0 0% 100% / 0.02)", border: `1px solid ${t.border}` };
+  const surfaceStrong = { background: "hsl(0 0% 100% / 0.03)", border: `1px solid ${t.border}` };
+
   return (
-    <div className="p-4 sm:p-6 max-w-6xl mx-auto text-white">
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 mb-6 flex-wrap">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2">
-            <Users className="w-6 h-6 text-amber-400" />
-            Fila de espera
-          </h1>
-          <p className="text-sm text-white/60 mt-1">
-            A fila avança automaticamente. Ao concluir/cancelar, o próximo é chamado sozinho.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            onClick={toggleOpen}
-            className={`inline-flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-semibold border transition-colors ${
-              isOpen
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/15"
-                : "border-red-500/30 bg-red-500/10 text-red-200 hover:bg-red-500/15"
-            }`}
-          >
-            {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
-            {isOpen ? "Barbearia aberta" : "Barbearia fechada"}
-          </button>
-          <button
-            onClick={() => setSettingsOpen(true)}
-            className="inline-flex items-center gap-2 h-11 px-4 rounded-xl text-sm font-medium border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-white/80 transition-colors"
-          >
-            <SettingsIcon className="w-4 h-4" /> Configurações
-          </button>
-          <button
-            onClick={callNext}
-            disabled={!nextEntry}
-            className="inline-flex items-center gap-2 h-11 px-5 rounded-xl font-semibold text-black bg-gradient-to-br from-amber-300 to-amber-500 hover:brightness-110 disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-amber-500/20 transition-all"
-          >
-            <Bell className="w-4 h-4" />
-            Chamar próximo {nextEntry ? `(${nextEntry.user_name.split(" ")[0]})` : ""}
-          </button>
-        </div>
+    <div className="space-y-5">
+      {/* Header actions */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          onClick={toggleOpen}
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors"
+          style={{
+            background: isOpen ? "hsl(142 65% 45% / 0.10)" : "hsl(0 70% 55% / 0.10)",
+            color: isOpen ? "hsl(142 65% 65%)" : "hsl(0 80% 72%)",
+            border: `1px solid ${isOpen ? "hsl(142 65% 45% / 0.30)" : "hsl(0 70% 55% / 0.25)"}`,
+          }}
+        >
+          {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
+          {isOpen ? "Barbearia aberta" : "Barbearia fechada"}
+        </button>
+
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          style={surfaceStrong}
+        >
+          <SettingsIcon className="w-4 h-4" /> Configurações
+        </button>
+
+        <button
+          onClick={callNext}
+          disabled={!nextEntry}
+          className="ml-auto inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:brightness-110"
+          style={{ background: ACCENT, boxShadow: `0 6px 20px -8px ${ACCENT}` }}
+        >
+          <Bell className="w-4 h-4" />
+          Chamar próximo {nextEntry ? `· ${nextEntry.user_name.split(" ")[0]}` : ""}
+        </button>
       </div>
 
       {/* KPIs */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3">
         {[
-          { label: "Aguardando", value: waiting.length, color: "text-amber-400" },
-          { label: "Em atendimento", value: active.length, color: "text-sky-400" },
-          { label: "Total ativos", value: entries.length, color: "text-white" },
+          { label: "Aguardando", value: waiting.length, color: "hsl(43 90% 65%)" },
+          { label: "Em atendimento", value: active.length, color: "hsl(200 85% 70%)" },
+          { label: "Total ativos", value: entries.length, color: "hsl(0 0% 95%)" },
         ].map((k) => (
-          <div key={k.label} className="rounded-2xl border border-white/10 bg-white/[0.02] p-4">
-            <div className="text-[11px] uppercase tracking-wider text-white/40">{k.label}</div>
-            <div className={`text-3xl font-bold tabular-nums mt-1 ${k.color}`}>{k.value}</div>
+          <div key={k.label} className="rounded-2xl p-4" style={surface}>
+            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{k.label}</div>
+            <div className="text-2xl sm:text-3xl font-bold tabular-nums mt-1" style={{ color: k.color }}>{k.value}</div>
           </div>
         ))}
       </div>
 
       {/* Ativos */}
       {active.length > 0 && (
-        <div className="mb-6">
-          <div className="text-[11px] uppercase tracking-wider text-white/40 px-1 mb-2">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1 mb-2">
             Agora ({active.length})
           </div>
           <div className="space-y-2">
             {active.map((e) => (
-              <div key={e.id} className="rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div key={e.id} className="rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+                style={{ background: "hsl(142 65% 45% / 0.04)", border: "1px solid hsl(142 65% 45% / 0.20)" }}>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="font-semibold">{e.user_name}</span>
-                    <span className={`text-[11px] px-2 py-0.5 rounded-full border ${statusBadge[e.status]}`}>
-                      {statusLabel[e.status]}
-                    </span>
+                    <span className="font-semibold text-foreground">{e.user_name}</span>
+                    <StatusBadge status={e.status} />
                   </div>
-                  {e.service_name && <div className="text-xs text-white/50 mt-0.5">{e.service_name}</div>}
-                  {e.notes && <div className="text-xs text-white/40 mt-0.5 italic">"{e.notes}"</div>}
+                  {e.service_name && <div className="text-xs text-muted-foreground mt-0.5">{e.service_name}</div>}
+                  {e.notes && <div className="text-xs text-muted-foreground/70 mt-0.5 italic">"{e.notes}"</div>}
                 </div>
                 <div className="flex flex-wrap gap-2 sm:justify-end">
                   {e.status === "calling" && (
                     <>
-                      <button onClick={() => openWhats(e.user_phone)} className="btn-mini">
-                        <MessageSquare className="w-3.5 h-3.5" /> WhatsApp
-                      </button>
-                      <button onClick={() => startService(e)} className="btn-mini-primary">
-                        <Play className="w-3.5 h-3.5" /> Iniciar
-                      </button>
-                      <button onClick={() => markNoShow(e)} className="btn-mini-danger">
-                        <UserX className="w-3.5 h-3.5" /> Faltou
-                      </button>
+                      <MiniBtn onClick={() => openWhats(e.user_phone)}><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</MiniBtn>
+                      <MiniBtn primary onClick={() => startService(e)}><Play className="w-3.5 h-3.5" /> Iniciar</MiniBtn>
+                      <MiniBtn danger onClick={() => markNoShow(e)}><UserX className="w-3.5 h-3.5" /> Faltou</MiniBtn>
                     </>
                   )}
                   {e.status === "in_service" && (
-                    <button onClick={() => finish(e)} className="btn-mini-primary">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Concluir
-                    </button>
+                    <MiniBtn primary onClick={() => finish(e)}><CheckCircle2 className="w-3.5 h-3.5" /> Concluir</MiniBtn>
                   )}
                 </div>
               </div>
@@ -291,13 +254,14 @@ const AdminFila = () => {
 
       {/* Aguardando */}
       <div>
-        <div className="text-[11px] uppercase tracking-wider text-white/40 px-1 mb-2">
+        <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1 mb-2">
           Aguardando ({waiting.length})
         </div>
         {loading ? (
-          <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-white/40" /></div>
+          <div className="flex justify-center py-10"><Loader2 className="w-5 h-5 animate-spin text-muted-foreground" /></div>
         ) : waiting.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-white/10 py-8 text-center text-white/40 text-sm">
+          <div className="rounded-2xl py-10 text-center text-sm text-muted-foreground"
+            style={{ border: `1px dashed ${t.border}` }}>
             Nenhum cliente aguardando.
           </div>
         ) : (
@@ -305,29 +269,25 @@ const AdminFila = () => {
             <AnimatePresence initial={false}>
               {waiting.map((e, i) => (
                 <motion.div key={e.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
-                  className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 flex flex-col sm:flex-row sm:items-center gap-3">
-                  <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-bold tabular-nums bg-white/5 border border-white/10">
+                  className="rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center gap-3" style={surface}>
+                  <div className="shrink-0 w-10 h-10 rounded-xl flex items-center justify-center font-bold tabular-nums text-sm"
+                    style={i === 0 ? { background: ACCENT_SOFT, border: `1px solid ${ACCENT_BORDER}`, color: ACCENT_LIGHT }
+                                   : { background: "hsl(0 0% 100% / 0.04)", border: `1px solid ${t.border}`, color: "hsl(0 0% 75%)" }}>
                     {i + 1}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="font-semibold truncate">{e.user_name}</div>
-                    <div className="text-xs text-white/50 flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+                    <div className="font-semibold truncate text-foreground">{e.user_name}</div>
+                    <div className="text-xs text-muted-foreground flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
                       {e.service_name && <span>{e.service_name}</span>}
                       {e.user_phone && <span className="inline-flex items-center gap-1"><Phone className="w-3 h-3" />{e.user_phone}</span>}
                       <span className="inline-flex items-center gap-1"><Clock className="w-3 h-3" />{formatWait(e.created_at)}</span>
                     </div>
-                    {e.notes && <div className="text-xs text-white/40 mt-1 italic">"{e.notes}"</div>}
+                    {e.notes && <div className="text-xs text-muted-foreground/70 mt-1 italic">"{e.notes}"</div>}
                   </div>
                   <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <button onClick={() => callEntry(e)} className="btn-mini-primary">
-                      <Bell className="w-3.5 h-3.5" /> Chamar
-                    </button>
-                    <button onClick={() => cancel(e)} className="btn-mini-danger">
-                      <XCircle className="w-3.5 h-3.5" /> Cancelar
-                    </button>
-                    <button onClick={() => remove(e.id)} className="btn-mini text-red-300/70 hover:text-red-300">
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <MiniBtn primary onClick={() => callEntry(e)}><Bell className="w-3.5 h-3.5" /> Chamar</MiniBtn>
+                    <MiniBtn danger onClick={() => cancel(e)}><XCircle className="w-3.5 h-3.5" /> Cancelar</MiniBtn>
+                    <MiniBtn onClick={() => remove(e.id)}><Trash2 className="w-3.5 h-3.5" /></MiniBtn>
                   </div>
                 </motion.div>
               ))}
@@ -338,19 +298,18 @@ const AdminFila = () => {
 
       {/* Histórico */}
       {history.length > 0 && (
-        <div className="mt-8">
-          <div className="text-[11px] uppercase tracking-wider text-white/40 px-1 mb-2">Histórico recente</div>
+        <div>
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground px-1 mb-2">Histórico recente</div>
           <div className="space-y-1">
             {history.map((e) => (
-              <div key={e.id} className="flex items-center gap-3 rounded-xl px-3 py-2 border border-white/5 bg-white/[0.01] text-sm">
+              <div key={e.id} className="flex items-center gap-3 rounded-xl px-3 py-2 text-sm"
+                style={{ background: "hsl(0 0% 100% / 0.015)", border: `1px solid ${t.border}` }}>
                 <div className="min-w-0 flex-1 truncate">
-                  <span className="font-medium">{e.user_name}</span>
-                  {e.service_name && <span className="text-white/40"> • {e.service_name}</span>}
+                  <span className="font-medium text-foreground">{e.user_name}</span>
+                  {e.service_name && <span className="text-muted-foreground"> · {e.service_name}</span>}
                 </div>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusBadge[e.status]}`}>
-                  {statusLabel[e.status]}
-                </span>
-                <button onClick={() => remove(e.id)} className="text-white/30 hover:text-red-300 transition-colors" title="Remover">
+                <StatusBadge status={e.status} small />
+                <button onClick={() => remove(e.id)} className="text-muted-foreground/50 hover:text-destructive transition-colors">
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
@@ -363,65 +322,70 @@ const AdminFila = () => {
       <AnimatePresence>
         {settingsOpen && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/75 backdrop-blur-md"
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/70 backdrop-blur-md"
             onClick={() => !savingSettings && setSettingsOpen(false)}>
             <motion.div initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 30, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="w-full sm:max-w-lg bg-[hsl(220_25%_6%)] border border-white/10 rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col">
-              <div className="flex items-center justify-between px-5 h-14 border-b border-white/5">
+              onClick={(ev) => ev.stopPropagation()}
+              className="w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl max-h-[92vh] flex flex-col"
+              style={{ background: t.pageBgAlt, border: `1px solid ${t.border}` }}>
+              <div className="flex items-center justify-between px-5 h-14" style={{ borderBottom: `1px solid ${t.border}` }}>
                 <div className="flex items-center gap-2">
-                  <SettingsIcon className="w-4 h-4 text-amber-300" />
-                  <div className="text-sm font-bold">Configurações da fila</div>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style={{ background: ACCENT_SOFT, border: `1px solid ${ACCENT_BORDER}` }}>
+                    <SettingsIcon className="w-3.5 h-3.5" style={{ color: ACCENT_LIGHT }} />
+                  </div>
+                  <div className="text-sm font-bold text-foreground">Configurações da fila</div>
                 </div>
-                <button onClick={() => setSettingsOpen(false)} className="w-8 h-8 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5">
+                <button onClick={() => setSettingsOpen(false)}
+                  className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/5">
                   <X className="w-4 h-4" />
                 </button>
               </div>
 
               <div className="p-5 overflow-y-auto space-y-5">
-                {/* Toggle */}
-                <div className="flex items-center justify-between gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.02]">
+                <div className="flex items-center justify-between gap-3 rounded-2xl p-4" style={surface}>
                   <div>
-                    <div className="text-sm font-bold">Status da barbearia</div>
-                    <div className="text-xs text-white/50 mt-0.5">Quando fechada, novos clientes não conseguem entrar na fila.</div>
+                    <div className="text-sm font-bold text-foreground">Status da barbearia</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">Quando fechada, novos clientes não conseguem entrar na fila.</div>
                   </div>
                   <button
                     onClick={() => setForm((f) => ({ ...f, site_status: f.site_status === "ativo" ? "inativo" : "ativo" }))}
-                    className={`shrink-0 h-9 px-4 rounded-lg text-xs font-bold border transition-colors ${
-                      form.site_status === "ativo"
-                        ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-200"
-                        : "border-red-500/30 bg-red-500/10 text-red-200"
-                    }`}
-                  >
+                    className="shrink-0 h-9 px-4 rounded-lg text-xs font-bold transition-colors"
+                    style={{
+                      background: form.site_status === "ativo" ? "hsl(142 65% 45% / 0.10)" : "hsl(0 70% 55% / 0.10)",
+                      color: form.site_status === "ativo" ? "hsl(142 65% 65%)" : "hsl(0 80% 72%)",
+                      border: `1px solid ${form.site_status === "ativo" ? "hsl(142 65% 45% / 0.30)" : "hsl(0 70% 55% / 0.25)"}`,
+                    }}>
                     {form.site_status === "ativo" ? "Aberta" : "Fechada"}
                   </button>
                 </div>
 
-                <Field label="Mensagem informativa (aparece sempre na tela de fila)"
-                  hint="Ex: Fila on-line disponível apenas quando estiver atendendo na barbearia.">
+                <Field label="Mensagem informativa" hint="Aparece sempre na tela pública da fila.">
                   <textarea rows={3} value={form.queue_info_message}
                     onChange={(e) => setForm({ ...form, queue_info_message: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                    className="w-full px-3 py-2.5 rounded-xl text-sm resize-none focus:outline-none text-foreground"
+                    style={{ background: "hsl(0 0% 100% / 0.03)", border: `1px solid ${t.border}` }} />
                 </Field>
 
-                <Field label="Mensagem quando fechado"
-                  hint="Aparece apenas quando a barbearia está com status Fechada.">
+                <Field label="Mensagem quando fechado" hint="Só aparece quando o status estiver Fechada.">
                   <textarea rows={3} value={form.queue_closed_message}
                     onChange={(e) => setForm({ ...form, queue_closed_message: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                    className="w-full px-3 py-2.5 rounded-xl text-sm resize-none focus:outline-none text-foreground"
+                    style={{ background: "hsl(0 0% 100% / 0.03)", border: `1px solid ${t.border}` }} />
                 </Field>
 
-                <Field label="Como usar esta página"
-                  hint="Texto explicativo que aparece expansível para os clientes.">
+                <Field label="Como usar esta página" hint="Texto expansível para orientar clientes.">
                   <textarea rows={4} value={form.queue_how_to_use}
                     onChange={(e) => setForm({ ...form, queue_how_to_use: e.target.value })}
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                    className="w-full px-3 py-2.5 rounded-xl text-sm resize-none focus:outline-none text-foreground"
+                    style={{ background: "hsl(0 0% 100% / 0.03)", border: `1px solid ${t.border}` }} />
                 </Field>
               </div>
 
-              <div className="p-5 border-t border-white/5">
+              <div className="p-5" style={{ borderTop: `1px solid ${t.border}` }}>
                 <button onClick={saveSettings} disabled={savingSettings}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-white disabled:opacity-60 transition-all hover:brightness-110 inline-flex items-center justify-center gap-2"
+                  style={{ background: ACCENT }}>
                   {savingSettings ? <Loader2 className="w-4 h-4 animate-spin" /> : (<><Save className="w-4 h-4" /> Salvar configurações</>)}
                 </button>
               </div>
@@ -429,23 +393,41 @@ const AdminFila = () => {
           </motion.div>
         )}
       </AnimatePresence>
-
-      <style>{`
-        .btn-mini { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 0.6rem; font-size: 12px; font-weight: 500; background: hsl(0 0% 100% / 0.04); border: 1px solid hsl(0 0% 100% / 0.1); color: hsl(0 0% 100% / 0.7); transition: all 150ms; }
-        .btn-mini:hover { background: hsl(0 0% 100% / 0.08); color: white; }
-        .btn-mini-primary { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.85rem; border-radius: 0.6rem; font-size: 12px; font-weight: 600; color: #000; background: linear-gradient(135deg, hsl(38 92% 65%), hsl(38 92% 55%)); transition: all 150ms; }
-        .btn-mini-primary:hover { filter: brightness(1.1); }
-        .btn-mini-danger { display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.4rem 0.75rem; border-radius: 0.6rem; font-size: 12px; font-weight: 500; background: hsl(0 70% 55% / 0.1); border: 1px solid hsl(0 70% 55% / 0.3); color: hsl(0 90% 75%); transition: all 150ms; }
-        .btn-mini-danger:hover { background: hsl(0 70% 55% / 0.2); }
-      `}</style>
     </div>
+  );
+};
+
+const StatusBadge = ({ status, small }: { status: WaitStatus; small?: boolean }) => {
+  const tone = statusTone[status];
+  return (
+    <span className={`inline-flex items-center rounded-full ${small ? "text-[10px] px-2 py-0.5" : "text-[11px] px-2 py-0.5"}`}
+      style={{ background: tone.bg, color: tone.text, border: `1px solid ${tone.border}` }}>
+      {statusLabel[status]}
+    </span>
+  );
+};
+
+const MiniBtn = ({ children, onClick, primary, danger }: {
+  children: React.ReactNode; onClick: () => void; primary?: boolean; danger?: boolean;
+}) => {
+  const style = primary
+    ? { background: ACCENT, color: "#fff", border: "1px solid transparent" }
+    : danger
+      ? { background: "hsl(0 70% 55% / 0.10)", color: "hsl(0 85% 75%)", border: "1px solid hsl(0 70% 55% / 0.28)" }
+      : { background: "hsl(0 0% 100% / 0.04)", color: "hsl(0 0% 75%)", border: "1px solid hsl(0 0% 100% / 0.10)" };
+  return (
+    <button onClick={onClick}
+      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
+      style={style}>
+      {children}
+    </button>
   );
 };
 
 const Field = ({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) => (
   <div>
-    <label className="text-[12px] font-semibold text-white/80 block mb-1.5">{label}</label>
-    {hint && <div className="text-[11px] text-white/40 mb-2">{hint}</div>}
+    <label className="text-[12px] font-semibold text-foreground block mb-1">{label}</label>
+    {hint && <div className="text-[11px] text-muted-foreground mb-2">{hint}</div>}
     {children}
   </div>
 );
