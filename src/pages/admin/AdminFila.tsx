@@ -237,7 +237,7 @@ const AdminFila = () => {
                   {e.service_name && <div className="text-xs text-muted-foreground mt-0.5">{e.service_name}</div>}
                   {e.notes && <div className="text-xs text-muted-foreground/70 mt-0.5 italic">"{e.notes}"</div>}
                 </div>
-                <div className="flex flex-wrap gap-2 sm:justify-end">
+                <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:justify-end">
                   {e.status === "calling" && (
                     <>
                       <MiniBtn onClick={() => openWhats(e.user_phone)}><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</MiniBtn>
@@ -246,7 +246,7 @@ const AdminFila = () => {
                     </>
                   )}
                   {e.status === "in_service" && (
-                    <MiniBtn primary onClick={() => finish(e)}><CheckCircle2 className="w-3.5 h-3.5" /> Concluir</MiniBtn>
+                    <MiniBtn primary onClick={() => finish(e)} full><CheckCircle2 className="w-3.5 h-3.5" /> Concluir atendimento</MiniBtn>
                   )}
                 </div>
               </div>
