@@ -321,7 +321,7 @@ const Fila = () => {
               disabled={!isOpen || !!myEntry}
               className={`h-11 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors ${
                 isOpen && !myEntry
-                  ? "bg-amber-500/90 hover:bg-amber-500 text-black/90"
+                  ? "bg-[#c69447] hover:bg-[#d4a656] text-black"
                   : "border border-white/10 bg-white/[0.02] text-white/30 opacity-50 cursor-not-allowed"
               }`}
             >
@@ -470,7 +470,7 @@ const Fila = () => {
           </motion.div>
         ) : (
           <button onClick={openFlow}
-            className="w-full h-14 rounded-2xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+            className="w-full h-14 rounded-2xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors inline-flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4" /> Entrar na fila
           </button>
         )}
@@ -572,7 +572,7 @@ const Fila = () => {
             />
             <div className="p-5 border-t border-white/5">
               <button onClick={() => handleAuth(() => setAuthOnlyOpen(false))} disabled={authLoading}
-                className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
                 {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authMode === "login" ? "Entrar" : "Criar conta")}
               </button>
             </div>
@@ -683,25 +683,25 @@ const Fila = () => {
             <div className="p-5 border-t border-white/5">
               {step === "service" && (
                 <button onClick={next} disabled={!selectedService}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:bg-white/5 disabled:text-white/30 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:bg-white/5 disabled:text-white/30 transition-colors inline-flex items-center justify-center gap-2">
                   Continuar <ChevronRight className="w-4 h-4" />
                 </button>
               )}
               {step === "barber" && (
                 <button onClick={next}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors inline-flex items-center justify-center gap-2">
                   Continuar <ChevronRight className="w-4 h-4" />
                 </button>
               )}
               {step === "auth" && (
                 <button onClick={() => handleAuth(() => setStep("confirm"))} disabled={authLoading}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
                   {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authMode === "login" ? "Entrar e continuar" : "Criar conta e continuar")}
                 </button>
               )}
               {step === "confirm" && (
                 <button onClick={confirmJoin} disabled={joining}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
                   {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : (<><CheckCircle2 className="w-4 h-4" /> Confirmar entrada na fila</>)}
                 </button>
               )}
@@ -763,7 +763,7 @@ const Fila = () => {
               {isOpen && !myEntry && (
                 <div className="p-4 border-t border-white/5">
                   <button onClick={() => { setServicesOpen(false); openFlow(); }}
-                    className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+                    className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors inline-flex items-center justify-center gap-2">
                     <Sparkles className="w-4 h-4" /> Entrar na fila
                   </button>
                 </div>
