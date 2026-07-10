@@ -594,6 +594,9 @@ const Fila = () => {
         </p>
       </div>
 
+      <PwaInstallBanner />
+
+
       {/* Auth-only modal */}
       <AnimatePresence>
         {authOnlyOpen && !userId && (
