@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import {
   Users, Clock, X, CheckCircle2, Loader2, Bell, BellOff, ChevronLeft, ChevronRight,
   Scissors, Instagram, Eye, EyeOff, Phone, Lock, User as UserIcon, ArrowLeft,
-  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle,
+  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
