@@ -306,7 +306,7 @@ const Fila = () => {
               disabled={!isOpen || !!myEntry}
               className={`h-11 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors ${
                 isOpen && !myEntry
-                  ? "bg-amber-400 hover:bg-amber-300 text-black"
+                  ? "bg-amber-500/90 hover:bg-amber-500 text-black/90"
                   : "border border-white/10 bg-white/[0.02] text-white/30 opacity-50 cursor-not-allowed"
               }`}
             >
