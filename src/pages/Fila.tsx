@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import {
   Users, Clock, X, CheckCircle2, Loader2, Bell, BellOff, ChevronLeft, ChevronRight,
   Scissors, Instagram, Eye, EyeOff, Phone, Lock, User as UserIcon, ArrowLeft,
-  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle,
+  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer, Download,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -21,7 +21,22 @@ interface Entry {
   notes: string | null;
   status: WaitStatus;
   created_at: string;
+  started_at?: string | null;
+  called_at?: string | null;
 }
+
+// gold suave (menos amarelo, mais dourado refinado)
+const GOLD = "#c69447";
+const GOLD_SOFT = "#d4a656";
+const parseMinutes = (txt: string | null | undefined): number => {
+  if (!txt) return 0;
+  const m = String(txt).match(/(\d+)\s*h/i);
+  const s = String(txt).match(/(\d+)\s*m/i);
+  const plain = String(txt).match(/(\d+)/);
+  const hours = m ? parseInt(m[1], 10) : 0;
+  const mins = s ? parseInt(s[1], 10) : (m ? 0 : (plain ? parseInt(plain[1], 10) : 0));
+  return hours * 60 + mins;
+};
 
 interface Service { id: string; title: string; price: number; duration: string | null; }
 interface Barber { id: string; name: string; specialty: string | null; avatar_url: string | null; }
@@ -156,6 +171,30 @@ const Fila = () => {
   }, [myEntry, waiting]);
 
   const isOpen = settings.site_status !== "inativo";
+
+  // ---------- ETA / previsão automática ----------
+  // Match entry service_name (formato "Título · R$ x") ao service.title
+  const findServiceForEntry = (entry: Entry | null | undefined) => {
+    if (!entry?.service_name) return null;
+    const head = entry.service_name.split("·")[0].trim().toLowerCase();
+    return services.find((s) => s.title.trim().toLowerCase() === head) || null;
+  };
+
+  const activeInService = useMemo(
+    () => entries.find((e) => e.status === "in_service" && e.started_at) || null,
+    [entries]
+  );
+
+  // Hora prevista do fim do atendimento atual (base para o contador do próximo)
+  const nextStartAt = useMemo<number | null>(() => {
+    if (!activeInService?.started_at) return null;
+    const svc = findServiceForEntry(activeInService);
+    const mins = parseMinutes(svc?.duration) || 30;
+    return new Date(activeInService.started_at).getTime() + mins * 60000;
+  }, [activeInService, services]);
+
+  const showEta = !!myEntry && myEntry.status === "waiting" && myPosition === 1 && !!nextStartAt;
+
 
   // ---------- actions ----------
   const openFlow = () => {
@@ -306,7 +345,7 @@ const Fila = () => {
               disabled={!isOpen || !!myEntry}
               className={`h-11 rounded-xl font-semibold text-sm inline-flex items-center justify-center gap-2 transition-colors ${
                 isOpen && !myEntry
-                  ? "bg-amber-500/90 hover:bg-amber-500 text-black/90"
+                  ? "bg-[#c69447] hover:bg-[#d4a656] text-black"
                   : "border border-white/10 bg-white/[0.02] text-white/30 opacity-50 cursor-not-allowed"
               }`}
             >
@@ -455,10 +494,23 @@ const Fila = () => {
           </motion.div>
         ) : (
           <button onClick={openFlow}
-            className="w-full h-14 rounded-2xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+            className="w-full h-14 rounded-2xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors inline-flex items-center justify-center gap-2">
             <Sparkles className="w-4 h-4" /> Entrar na fila
           </button>
         )}
+
+        {/* ETA / Previsão automática para o 1º da fila */}
+        {showEta && nextStartAt && (
+          <EtaCountdown endTs={nextStartAt} userId={userId} onNotify={(kind, title, body) => {
+            if (push.subscribed && userId) {
+              supabase.functions.invoke("send-push", {
+                body: { user_ids: [userId], title, body, link: "/fila", tag: `eta-${kind}` },
+              }).catch(() => {});
+            }
+            toast(title, { description: body });
+          }} />
+        )}
+
 
         {userId && userProfile && (
           <div className="flex items-center justify-between text-[11px] text-white/40 px-1">
@@ -542,6 +594,9 @@ const Fila = () => {
         </p>
       </div>
 
+      <PwaInstallBanner />
+
+
       {/* Auth-only modal */}
       <AnimatePresence>
         {authOnlyOpen && !userId && (
@@ -557,7 +612,7 @@ const Fila = () => {
             />
             <div className="p-5 border-t border-white/5">
               <button onClick={() => handleAuth(() => setAuthOnlyOpen(false))} disabled={authLoading}
-                className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
                 {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authMode === "login" ? "Entrar" : "Criar conta")}
               </button>
             </div>
@@ -668,25 +723,25 @@ const Fila = () => {
             <div className="p-5 border-t border-white/5">
               {step === "service" && (
                 <button onClick={next} disabled={!selectedService}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:bg-white/5 disabled:text-white/30 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:bg-white/5 disabled:text-white/30 transition-colors inline-flex items-center justify-center gap-2">
                   Continuar <ChevronRight className="w-4 h-4" />
                 </button>
               )}
               {step === "barber" && (
                 <button onClick={next}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors inline-flex items-center justify-center gap-2">
                   Continuar <ChevronRight className="w-4 h-4" />
                 </button>
               )}
               {step === "auth" && (
                 <button onClick={() => handleAuth(() => setStep("confirm"))} disabled={authLoading}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
                   {authLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : (authMode === "login" ? "Entrar e continuar" : "Criar conta e continuar")}
                 </button>
               )}
               {step === "confirm" && (
                 <button onClick={confirmJoin} disabled={joining}
-                  className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
+                  className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2">
                   {joining ? <Loader2 className="w-4 h-4 animate-spin" /> : (<><CheckCircle2 className="w-4 h-4" /> Confirmar entrada na fila</>)}
                 </button>
               )}
@@ -748,7 +803,7 @@ const Fila = () => {
               {isOpen && !myEntry && (
                 <div className="p-4 border-t border-white/5">
                   <button onClick={() => { setServicesOpen(false); openFlow(); }}
-                    className="w-full h-12 rounded-xl font-bold text-black bg-amber-400 hover:bg-amber-300 transition-colors inline-flex items-center justify-center gap-2">
+                    className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors inline-flex items-center justify-center gap-2">
                     <Sparkles className="w-4 h-4" /> Entrar na fila
                   </button>
                 </div>
@@ -848,4 +903,141 @@ const Row = ({ label, value, extra }: { label: string; value: string; extra?: st
   </div>
 );
 
+// ---------- ETA Countdown (baseado em timestamp do servidor) ----------
+const EtaCountdown = ({ endTs, userId, onNotify }: {
+  endTs: number;
+  userId: string | null;
+  onNotify: (kind: "15" | "5" | "0", title: string, body: string) => void;
+}) => {
+  const [now, setNow] = useState(() => Date.now());
+  const firedRef = (globalThis as any).__etaFired || ((globalThis as any).__etaFired = new Set<string>());
+
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const diff = Math.max(0, Math.floor((endTs - now) / 1000));
+  const mm = Math.floor(diff / 60);
+  const ss = diff % 60;
+  const isAlert = diff <= 15 * 60 && diff > 5 * 60;
+  const isNext = diff <= 5 * 60 && diff > 0;
+  const isDue = diff === 0;
+
+  // Notificações nos thresholds
+  useEffect(() => {
+    if (!userId) return;
+    const remaining = Math.floor((endTs - Date.now()) / 1000);
+    const check = (threshold: number, key: string, title: string, body: string) => {
+      const tag = `${userId}-${endTs}-${key}`;
+      if (remaining <= threshold && !firedRef.has(tag)) {
+        firedRef.add(tag);
+        onNotify(key as any, title, body);
+      }
+    };
+    check(15 * 60, "15", "Seu atendimento está se aproximando", "Recomendamos que você vá para a barbearia.");
+    check(5 * 60, "5", "Você será o próximo", "Prepare-se, sua vez está chegando.");
+    check(0, "0", "Sua vez chegou!", "Dirija-se à barbearia agora.");
+  }, [now, endTs, userId]);
+
+  const palette = isDue
+    ? { border: "border-emerald-500/40", bg: "bg-emerald-500/[0.06]", text: "text-emerald-200", num: "text-emerald-200", icon: <CheckCircle2 className="w-4 h-4" /> }
+    : isNext
+      ? { border: "border-red-500/50", bg: "bg-red-500/[0.08]", text: "text-red-200", num: "text-red-300", icon: <AlertTriangle className="w-4 h-4" /> }
+      : isAlert
+        ? { border: "border-red-500/40", bg: "bg-red-500/[0.05]", text: "text-red-200", num: "text-red-300", icon: <AlertTriangle className="w-4 h-4" /> }
+        : { border: "border-[#c69447]/35", bg: "bg-[#c69447]/[0.06]", text: "text-[#e5b877]", num: "text-[#e5b877]", icon: <Timer className="w-4 h-4" /> };
+
+  return (
+    <motion.div layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}
+      className={`rounded-3xl p-5 border ${palette.border} ${palette.bg} transition-colors`}>
+      <div className="flex items-center gap-2">
+        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold border ${palette.border} ${palette.text} bg-black/20`}>
+          {palette.icon}
+          {isDue ? "Sua vez chegou" : isNext ? "Dirija-se para a barbearia" : isAlert ? "Vá para a barbearia agora" : "Prepare-se"}
+        </span>
+      </div>
+      <div className="mt-3 text-sm text-white/70 leading-relaxed">
+        {isDue
+          ? "Sua vez chegou. Aguardando o barbeiro iniciar seu atendimento."
+          : isNext
+            ? "Você será o próximo atendimento."
+            : isAlert
+              ? "Sua vez está chegando. Recomendamos que você vá para a barbearia agora."
+              : "Seu atendimento está se aproximando."}
+      </div>
+      <div className="mt-4 flex items-baseline gap-2">
+        <div className="text-[10px] uppercase tracking-widest text-white/40">Início previsto em</div>
+      </div>
+      <div className={`mt-1 text-5xl font-black tabular-nums tracking-tight ${palette.num}`}>
+        {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
+      </div>
+    </motion.div>
+  );
+};
+
+// ---------- Banner PWA de instalação ----------
+const PwaInstallBanner = () => {
+  const [prompt, setPrompt] = useState<any>(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const standalone =
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
+    if (standalone) return;
+
+    const dismissed = Number(localStorage.getItem("pwa_banner_dismissed_at") || 0);
+    const days = (Date.now() - dismissed) / (1000 * 60 * 60 * 24);
+    if (dismissed && days < 7) return;
+
+    const handler = (e: any) => {
+      e.preventDefault();
+      setPrompt(e);
+      setVisible(true);
+    };
+    window.addEventListener("beforeinstallprompt", handler);
+    return () => window.removeEventListener("beforeinstallprompt", handler);
+  }, []);
+
+  const install = async () => {
+    if (!prompt) return;
+    prompt.prompt();
+    await prompt.userChoice;
+    setPrompt(null);
+    setVisible(false);
+  };
+  const dismiss = () => {
+    localStorage.setItem("pwa_banner_dismissed_at", String(Date.now()));
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+  return (
+    <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
+      className="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[440px] z-40">
+      <div className="rounded-2xl border border-white/10 bg-[hsl(220_25%_6%)]/95 backdrop-blur-xl shadow-2xl p-4 flex items-center gap-3">
+        <div className="w-11 h-11 rounded-xl bg-[#c69447]/15 border border-[#c69447]/30 flex items-center justify-center shrink-0">
+          <Download className="w-5 h-5 text-[#e5b877]" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="text-sm font-bold text-white">Instalar aplicativo</div>
+          <div className="text-[11px] text-white/60 leading-snug mt-0.5">
+            Receba notificações em tempo real e acompanhe sua posição na fila.
+          </div>
+        </div>
+        <button onClick={dismiss}
+          className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5">
+          <X className="w-4 h-4" />
+        </button>
+        <button onClick={install}
+          className="shrink-0 h-9 px-3.5 rounded-lg text-xs font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors">
+          Instalar
+        </button>
+      </div>
+    </motion.div>
+  );
+};
+
 export default Fila;
+

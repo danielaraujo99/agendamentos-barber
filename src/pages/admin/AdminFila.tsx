@@ -2,11 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Bell, Play, CheckCircle2, XCircle, UserX, Loader2, Trash2, MessageSquare, Clock,
-  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save, Phone,
+  Settings as SettingsIcon, X, DoorOpen, DoorClosed, Save, Phone, Timer,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useThemeColors } from "@/hooks/useThemeColors";
+
 
 type WaitStatus = "waiting" | "calling" | "in_service" | "done" | "cancelled" | "no_show";
 
@@ -68,6 +69,23 @@ const AdminFila = () => {
     queue_how_to_use: "",
   });
 
+  // Serviços — para configurar a duração média (usado no contador da fila pública)
+  type SvcRow = { id: string; title: string; duration: string | null };
+  const [svcList, setSvcList] = useState<SvcRow[]>([]);
+  const [svcSaving, setSvcSaving] = useState<string | null>(null);
+
+  const fetchServices = async () => {
+    const { data } = await supabase.from("services").select("id,title,duration").eq("active", true).order("sort_order");
+    setSvcList((data || []) as SvcRow[]);
+  };
+  const saveSvcDuration = async (id: string, duration: string) => {
+    setSvcSaving(id);
+    const { error } = await supabase.from("services").update({ duration }).eq("id", id);
+    setSvcSaving(null);
+    if (error) toast.error("Erro ao salvar duração."); else toast.success("Duração atualizada.");
+  };
+
+
   const fetchAll = async () => {
     const { data: activeData } = await supabase
       .from("waitlist_entries").select("*")
@@ -96,7 +114,7 @@ const AdminFila = () => {
   };
 
   useEffect(() => {
-    fetchAll(); fetchSettings();
+    fetchAll(); fetchSettings(); fetchServices();
     const ch = supabase.channel("waitlist-admin")
       .on("postgres_changes", { event: "*", schema: "public", table: "waitlist_entries" }, () => fetchAll())
       .subscribe();
@@ -320,6 +338,42 @@ const AdminFila = () => {
           </div>
         </div>
       )}
+
+      {/* Duração média dos serviços — alimenta o contador regressivo da fila pública */}
+      <div>
+        <div className="flex items-center gap-2 px-1 mb-2">
+          <Timer className="w-3.5 h-3.5 text-muted-foreground" />
+          <div className="text-[10px] uppercase tracking-widest text-muted-foreground">
+            Duração média dos serviços
+          </div>
+        </div>
+        <div className="rounded-2xl p-2 space-y-1" style={surface}>
+          <div className="px-3 py-2 text-[11px] text-muted-foreground">
+            Usada para calcular o tempo estimado do próximo atendimento. Ex.: "30 min", "1h", "45".
+          </div>
+          {svcList.length === 0 ? (
+            <div className="px-3 py-4 text-sm text-muted-foreground text-center">Nenhum serviço ativo.</div>
+          ) : svcList.map((s) => (
+            <div key={s.id} className="flex items-center gap-3 rounded-xl px-3 py-2"
+              style={{ background: "hsl(0 0% 100% / 0.02)" }}>
+              <div className="min-w-0 flex-1 text-sm font-medium text-foreground truncate">{s.title}</div>
+              <input
+                defaultValue={s.duration || ""}
+                onBlur={(ev) => {
+                  const v = ev.target.value.trim();
+                  if (v !== (s.duration || "")) saveSvcDuration(s.id, v);
+                }}
+                placeholder="30 min"
+                className="h-9 w-28 px-3 rounded-lg text-sm text-foreground focus:outline-none tabular-nums"
+                style={{ background: "hsl(0 0% 100% / 0.04)", border: `1px solid ${t.border}` }}
+              />
+              {svcSaving === s.id && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+            </div>
+          ))}
+        </div>
+      </div>
+
+
 
       {/* Settings modal */}
       <AnimatePresence>
