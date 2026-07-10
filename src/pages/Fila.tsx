@@ -314,13 +314,6 @@ const Fila = () => {
             </button>
           </div>
 
-          <button
-            onClick={() => setServicesOpen(true)}
-            className="mt-3 inline-flex items-center gap-2 h-9 px-4 rounded-full border border-white/10 bg-white/[0.03] hover:bg-white/[0.06] text-[12px] font-semibold text-white/85 transition-colors"
-          >
-            <Scissors className="w-3.5 h-3.5 text-amber-300" /> Serviços disponíveis
-            <span className="text-[10px] font-bold text-amber-300 tabular-nums">{services.length}</span>
-          </button>
         </div>
 
         {/* Business header card */}

@@ -58,7 +58,6 @@ const navItems: NavItem[] = [
   { label: "Cupons", path: "/admin/coupons", icon: Tag },
   { label: "Avaliações", path: "/admin/reviews", icon: Star },
   { label: "ChatPro", path: "/admin/confg", icon: MessageSquare, superAdminOnly: true },
-  { label: "Google Calendar", path: "/admin/google-calendar", icon: CalendarDays },
   { label: "Usuários", path: "/admin/users", icon: UserCog, superAdminOnly: true },
   { label: "Configurações", path: "/admin/settings", icon: Settings },
 ];
