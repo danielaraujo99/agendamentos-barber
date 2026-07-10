@@ -499,6 +499,19 @@ const Fila = () => {
           </button>
         )}
 
+        {/* ETA / Previsão automática para o 1º da fila */}
+        {showEta && nextStartAt && (
+          <EtaCountdown endTs={nextStartAt} userId={userId} onNotify={(kind, title, body) => {
+            if (push.subscribed && userId) {
+              supabase.functions.invoke("send-push", {
+                body: { user_ids: [userId], title, body, link: "/fila", tag: `eta-${kind}` },
+              }).catch(() => {});
+            }
+            toast(title, { description: body });
+          }} />
+        )}
+
+
         {userId && userProfile && (
           <div className="flex items-center justify-between text-[11px] text-white/40 px-1">
             <span>Logado como <span className="text-white/70">{userProfile.name}</span></span>
