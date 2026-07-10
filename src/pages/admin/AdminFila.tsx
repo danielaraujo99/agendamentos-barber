@@ -169,38 +169,41 @@ const AdminFila = () => {
   return (
     <div className="space-y-5">
       {/* Header actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={toggleOpen}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors"
-          style={{
-            background: isOpen ? "hsl(142 65% 45% / 0.10)" : "hsl(0 70% 55% / 0.10)",
-            color: isOpen ? "hsl(142 65% 65%)" : "hsl(0 80% 72%)",
-            border: `1px solid ${isOpen ? "hsl(142 65% 45% / 0.30)" : "hsl(0 70% 55% / 0.25)"}`,
-          }}
-        >
-          {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
-          {isOpen ? "Barbearia aberta" : "Barbearia fechada"}
-        </button>
+      <div className="grid grid-cols-1 sm:grid-cols-[auto_auto_1fr] gap-2">
+        <div className="grid grid-cols-2 sm:contents gap-2">
+          <button
+            onClick={toggleOpen}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors"
+            style={{
+              background: isOpen ? "hsl(142 65% 45% / 0.10)" : "hsl(0 70% 55% / 0.10)",
+              color: isOpen ? "hsl(142 65% 65%)" : "hsl(0 80% 72%)",
+              border: `1px solid ${isOpen ? "hsl(142 65% 45% / 0.30)" : "hsl(0 70% 55% / 0.25)"}`,
+            }}
+          >
+            {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
+            <span className="truncate">{isOpen ? "Aberta" : "Fechada"}</span>
+          </button>
 
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          style={surfaceStrong}
-        >
-          <SettingsIcon className="w-4 h-4" /> Configurações
-        </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            style={surfaceStrong}
+          >
+            <SettingsIcon className="w-4 h-4" /> <span className="truncate">Configurações</span>
+          </button>
+        </div>
 
         <button
           onClick={callNext}
           disabled={!nextEntry}
-          className="ml-auto inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:brightness-110"
+          className="sm:justify-self-end w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:brightness-110"
           style={{ background: ACCENT, boxShadow: `0 6px 20px -8px ${ACCENT}` }}
         >
           <Bell className="w-4 h-4" />
-          Chamar próximo {nextEntry ? `· ${nextEntry.user_name.split(" ")[0]}` : ""}
+          <span className="truncate">Chamar próximo{nextEntry ? ` · ${nextEntry.user_name.split(" ")[0]}` : ""}</span>
         </button>
       </div>
+
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
@@ -234,7 +237,7 @@ const AdminFila = () => {
                   {e.service_name && <div className="text-xs text-muted-foreground mt-0.5">{e.service_name}</div>}
                   {e.notes && <div className="text-xs text-muted-foreground/70 mt-0.5 italic">"{e.notes}"</div>}
                 </div>
-                <div className="flex flex-wrap gap-2 sm:justify-end">
+                <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:justify-end">
                   {e.status === "calling" && (
                     <>
                       <MiniBtn onClick={() => openWhats(e.user_phone)}><MessageSquare className="w-3.5 h-3.5" /> WhatsApp</MiniBtn>
@@ -243,7 +246,7 @@ const AdminFila = () => {
                     </>
                   )}
                   {e.status === "in_service" && (
-                    <MiniBtn primary onClick={() => finish(e)}><CheckCircle2 className="w-3.5 h-3.5" /> Concluir</MiniBtn>
+                    <MiniBtn primary onClick={() => finish(e)} full><CheckCircle2 className="w-3.5 h-3.5" /> Concluir atendimento</MiniBtn>
                   )}
                 </div>
               </div>
@@ -284,10 +287,10 @@ const AdminFila = () => {
                     </div>
                     {e.notes && <div className="text-xs text-muted-foreground/70 mt-1 italic">"{e.notes}"</div>}
                   </div>
-                  <div className="flex flex-wrap gap-2 sm:justify-end">
+                  <div className="grid grid-cols-3 sm:flex sm:flex-wrap gap-2 sm:justify-end">
                     <MiniBtn primary onClick={() => callEntry(e)}><Bell className="w-3.5 h-3.5" /> Chamar</MiniBtn>
                     <MiniBtn danger onClick={() => cancel(e)}><XCircle className="w-3.5 h-3.5" /> Cancelar</MiniBtn>
-                    <MiniBtn onClick={() => remove(e.id)}><Trash2 className="w-3.5 h-3.5" /></MiniBtn>
+                    <MiniBtn onClick={() => remove(e.id)}><Trash2 className="w-3.5 h-3.5" /> Remover</MiniBtn>
                   </div>
                 </motion.div>
               ))}
@@ -407,8 +410,8 @@ const StatusBadge = ({ status, small }: { status: WaitStatus; small?: boolean })
   );
 };
 
-const MiniBtn = ({ children, onClick, primary, danger }: {
-  children: React.ReactNode; onClick: () => void; primary?: boolean; danger?: boolean;
+const MiniBtn = ({ children, onClick, primary, danger, full }: {
+  children: React.ReactNode; onClick: () => void; primary?: boolean; danger?: boolean; full?: boolean;
 }) => {
   const style = primary
     ? { background: ACCENT, color: "#fff", border: "1px solid transparent" }
@@ -417,7 +420,7 @@ const MiniBtn = ({ children, onClick, primary, danger }: {
       : { background: "hsl(0 0% 100% / 0.04)", color: "hsl(0 0% 75%)", border: "1px solid hsl(0 0% 100% / 0.10)" };
   return (
     <button onClick={onClick}
-      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-xs font-semibold transition-all hover:brightness-110"
+      className={`inline-flex items-center justify-center gap-1.5 h-9 sm:h-8 px-3 rounded-lg text-xs font-semibold transition-all hover:brightness-110 w-full ${full ? "col-span-3" : "sm:w-auto"}`}
       style={style}>
       {children}
     </button>
