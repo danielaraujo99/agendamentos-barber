@@ -169,38 +169,41 @@ const AdminFila = () => {
   return (
     <div className="space-y-5">
       {/* Header actions */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button
-          onClick={toggleOpen}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors"
-          style={{
-            background: isOpen ? "hsl(142 65% 45% / 0.10)" : "hsl(0 70% 55% / 0.10)",
-            color: isOpen ? "hsl(142 65% 65%)" : "hsl(0 80% 72%)",
-            border: `1px solid ${isOpen ? "hsl(142 65% 45% / 0.30)" : "hsl(0 70% 55% / 0.25)"}`,
-          }}
-        >
-          {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
-          {isOpen ? "Barbearia aberta" : "Barbearia fechada"}
-        </button>
+      <div className="grid grid-cols-1 sm:grid-cols-[auto_auto_1fr] gap-2">
+        <div className="grid grid-cols-2 sm:contents gap-2">
+          <button
+            onClick={toggleOpen}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold transition-colors"
+            style={{
+              background: isOpen ? "hsl(142 65% 45% / 0.10)" : "hsl(0 70% 55% / 0.10)",
+              color: isOpen ? "hsl(142 65% 65%)" : "hsl(0 80% 72%)",
+              border: `1px solid ${isOpen ? "hsl(142 65% 45% / 0.30)" : "hsl(0 70% 55% / 0.25)"}`,
+            }}
+          >
+            {isOpen ? <DoorOpen className="w-4 h-4" /> : <DoorClosed className="w-4 h-4" />}
+            <span className="truncate">{isOpen ? "Aberta" : "Fechada"}</span>
+          </button>
 
-        <button
-          onClick={() => setSettingsOpen(true)}
-          className="inline-flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-          style={surfaceStrong}
-        >
-          <SettingsIcon className="w-4 h-4" /> Configurações
-        </button>
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex items-center justify-center gap-2 h-10 px-4 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            style={surfaceStrong}
+          >
+            <SettingsIcon className="w-4 h-4" /> <span className="truncate">Configurações</span>
+          </button>
+        </div>
 
         <button
           onClick={callNext}
           disabled={!nextEntry}
-          className="ml-auto inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:brightness-110"
+          className="sm:justify-self-end w-full sm:w-auto inline-flex items-center justify-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all hover:brightness-110"
           style={{ background: ACCENT, boxShadow: `0 6px 20px -8px ${ACCENT}` }}
         >
           <Bell className="w-4 h-4" />
-          Chamar próximo {nextEntry ? `· ${nextEntry.user_name.split(" ")[0]}` : ""}
+          <span className="truncate">Chamar próximo{nextEntry ? ` · ${nextEntry.user_name.split(" ")[0]}` : ""}</span>
         </button>
       </div>
+
 
       {/* KPIs */}
       <div className="grid grid-cols-3 gap-3">
