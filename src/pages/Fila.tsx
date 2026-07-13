@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Clock, X, CheckCircle2, Loader2, Bell, BellOff, ChevronRight,
   Scissors, Instagram, Eye, EyeOff, Phone, Lock, User as UserIcon, ArrowLeft,
-  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer, Download,
+  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer,
   Check, Share, Smartphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
