@@ -25,6 +25,7 @@ const PERMISSION_GROUPS: { label: string; keys: { key: string; label: string }[]
     keys: [
       { key: "dashboard", label: "Dashboard" },
       { key: "appointments", label: "Agendamentos" },
+      { key: "fila", label: "Fila de espera" },
       { key: "commands", label: "Comandas" },
       { key: "cashier", label: "Caixa" },
       { key: "services", label: "Serviços" },
@@ -60,13 +61,13 @@ const PERMISSION_GROUPS: { label: string; keys: { key: string; label: string }[]
 const DEFAULT_PERMISSIONS_BY_ROLE: Record<Role, Record<string, boolean>> = {
   admin: Object.fromEntries(PERMISSION_GROUPS.flatMap((g) => g.keys.map((k) => [k.key, true]))),
   manager: {
-    dashboard: true, appointments: true, commands: true, cashier: true, services: true, barbers: true, reviews: true,
+    dashboard: true, appointments: true, fila: true, commands: true, cashier: true, services: true, barbers: true, reviews: true,
     finance: true, commissions: true, credit: true, coupons: true,
     store: true, inventory: true, suppliers: true,
     settings: false,
   },
   barber: {
-    dashboard: true, appointments: true, commands: true, cashier: false, services: true, barbers: false, reviews: true,
+    dashboard: true, appointments: true, fila: true, commands: true, cashier: false, services: true, barbers: false, reviews: true,
     finance: false, commissions: true, credit: false, coupons: false,
     store: false, inventory: false, suppliers: false,
     settings: false,

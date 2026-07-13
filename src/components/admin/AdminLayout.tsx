@@ -71,6 +71,7 @@ const PATH_PERMISSION: Record<string, string> = {
   "/admin/credit": "credit",
   "/admin/inventory": "inventory",
   "/admin/suppliers": "inventory",
+  "/admin/fila": "fila",
 };
 
 const AdminLayout = () => {
@@ -161,7 +162,7 @@ const AdminLayout = () => {
     if (it.superAdminOnly) return isSuperAdmin(userEmail);
     // Barbeiro: limitar a Dashboard, Agendamentos, Comissões, Configurações
     if (activeRole === "barber") {
-      const allowedBarberPaths = new Set(["/admin", "/admin/appointments", "/admin/commissions", "/admin/settings"]);
+      const allowedBarberPaths = new Set(["/admin", "/admin/appointments", "/admin/fila", "/admin/commissions", "/admin/settings"]);
       if (!allowedBarberPaths.has(it.path)) return false;
     }
     if (!activePerms) return true;
