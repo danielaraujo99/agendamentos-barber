@@ -874,7 +874,37 @@ const Fila = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* iOS install hint (Web Push só funciona no iOS após instalar PWA na Tela Inicial) */}
+      <AnimatePresence>
+        {iosHintOpen && (
+          <ModalShell onClose={() => setIosHintOpen(false)} title="Ativar notificações no iPhone">
+            <div className="space-y-3 text-sm text-white/80 leading-relaxed">
+              <p>
+                No iPhone, para receber avisos em tempo real com o app fechado é
+                necessário <b>instalar este site na Tela de Início</b> primeiro.
+              </p>
+              <ol className="space-y-2 pl-4 list-decimal text-white/70">
+                <li>Toque no botão <b>Compartilhar</b> <Share className="inline w-3.5 h-3.5" /> na barra do Safari.</li>
+                <li>Escolha <b>“Adicionar à Tela de Início”</b>.</li>
+                <li>Abra o app pela nova ícone e ative as notificações.</li>
+              </ol>
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] text-white/50 flex items-start gap-2">
+                <Smartphone className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                Isso é uma exigência da Apple (iOS 16.4+). No Android, funciona direto no navegador.
+              </div>
+            </div>
+            <div className="p-5 border-t border-white/5">
+              <button onClick={() => setIosHintOpen(false)}
+                className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors">
+                Entendi
+              </button>
+            </div>
+          </ModalShell>
+        )}
+      </AnimatePresence>
     </div>
+
   );
 };
 
