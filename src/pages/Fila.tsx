@@ -5,6 +5,7 @@ import {
   Users, Clock, X, CheckCircle2, Loader2, Bell, BellOff, ChevronLeft, ChevronRight,
   Scissors, Instagram, Eye, EyeOff, Phone, Lock, User as UserIcon, ArrowLeft,
   Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer, Download,
+  Check, Share, Smartphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,9 +26,15 @@ interface Entry {
   called_at?: string | null;
 }
 
-// gold suave (menos amarelo, mais dourado refinado)
-const GOLD = "#c69447";
-const GOLD_SOFT = "#d4a656";
+// gold suave (não neon)
+const GOLD = "#b8863d";
+const GOLD_SOFT = "#c69447";
+const isIos = () =>
+  typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = () =>
+  typeof window !== "undefined" &&
+  (window.matchMedia?.("(display-mode: standalone)").matches ||
+    (window.navigator as any).standalone === true);
 const parseMinutes = (txt: string | null | undefined): number => {
   if (!txt) return 0;
   const m = String(txt).match(/(\d+)\s*h/i);
@@ -53,7 +60,7 @@ interface Settings {
 }
 
 const statusMeta: Record<WaitStatus, { label: string; tone: string }> = {
-  waiting: { label: "Aguardando", tone: "text-amber-200 bg-amber-500/10 border-amber-500/25" },
+  waiting: { label: "Aguardando", tone: "text-[#e5b877] bg-[#c69447]/10 border-[#c69447]/25" },
   calling: { label: "Chamando", tone: "text-emerald-200 bg-emerald-500/10 border-emerald-500/30" },
   in_service: { label: "Em atendimento", tone: "text-sky-200 bg-sky-500/10 border-sky-500/25" },
   done: { label: "Concluído", tone: "text-white/50 bg-white/5 border-white/10" },
@@ -95,10 +102,11 @@ const Fila = () => {
   const [flowOpen, setFlowOpen] = useState(false);
   const [authOnlyOpen, setAuthOnlyOpen] = useState(false);
   const [step, setStep] = useState<Step>("service");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [notes, setNotes] = useState("");
   const [joining, setJoining] = useState(false);
+  const [iosHintOpen, setIosHintOpen] = useState(false);
 
   // Auth form
   const [authMode, setAuthMode] = useState<AuthMode>("login");
@@ -173,11 +181,21 @@ const Fila = () => {
   const isOpen = settings.site_status !== "inativo";
 
   // ---------- ETA / previsão automática ----------
-  // Match entry service_name (formato "Título · R$ x") ao service.title
-  const findServiceForEntry = (entry: Entry | null | undefined) => {
-    if (!entry?.service_name) return null;
+  // Prefere "Dur: NNmin" nas notes (multi-serviço); senão tenta casar service_name → duration do serviço
+  const findDurationMinutes = (entry: Entry | null | undefined): number => {
+    if (!entry) return 0;
+    const m = (entry.notes || "").match(/Dur:\s*(\d+)\s*min/i);
+    if (m) return parseInt(m[1], 10) || 0;
+    if (!entry.service_name) return 0;
     const head = entry.service_name.split("·")[0].trim().toLowerCase();
-    return services.find((s) => s.title.trim().toLowerCase() === head) || null;
+    // pode ter "A + B"; soma se casar múltiplos
+    const parts = head.split(/\s*\+\s*/);
+    let total = 0;
+    for (const p of parts) {
+      const svc = services.find((s) => s.title.trim().toLowerCase() === p);
+      total += parseMinutes(svc?.duration);
+    }
+    return total;
   };
 
   const activeInService = useMemo(
@@ -188,8 +206,7 @@ const Fila = () => {
   // Hora prevista do fim do atendimento atual (base para o contador do próximo)
   const nextStartAt = useMemo<number | null>(() => {
     if (!activeInService?.started_at) return null;
-    const svc = findServiceForEntry(activeInService);
-    const mins = parseMinutes(svc?.duration) || 30;
+    const mins = findDurationMinutes(activeInService) || 30;
     return new Date(activeInService.started_at).getTime() + mins * 60000;
   }, [activeInService, services]);
 
@@ -201,7 +218,7 @@ const Fila = () => {
     if (!isOpen) return;
     if (myEntry) { toast.info("Você já está na fila."); return; }
     setStep("service");
-    setSelectedService(null);
+    setSelectedServices([]);
     setSelectedBarber(null);
     setNotes("");
     setFlowOpen(true);
@@ -212,6 +229,21 @@ const Fila = () => {
     setFName(""); setFSurname(""); setFPhone(""); setFPassword("");
     setAuthOnlyOpen(true);
   };
+
+  const toggleService = (svc: Service) => {
+    setSelectedServices((prev) =>
+      prev.some((s) => s.id === svc.id) ? prev.filter((s) => s.id !== svc.id) : [...prev, svc]
+    );
+  };
+
+  const totalPrice = useMemo(
+    () => selectedServices.reduce((acc, s) => acc + Number(s.price || 0), 0),
+    [selectedServices]
+  );
+  const totalDurationMin = useMemo(
+    () => selectedServices.reduce((acc, s) => acc + (parseMinutes(s.duration) || 0), 0),
+    [selectedServices]
+  );
 
   const handleAuth = async (afterAuth: () => void) => {
     const digits = fPhone.replace(/\D/g, "");
@@ -243,16 +275,19 @@ const Fila = () => {
   };
 
   const confirmJoin = async () => {
-    if (!userId || !userProfile || !selectedService) return;
+    if (!userId || !userProfile || selectedServices.length === 0) return;
     setJoining(true);
     const barberTag = selectedBarber ? `Barbeiro: ${selectedBarber.name}` : "";
     const obs = notes.trim();
-    const combined = [barberTag, obs && `Obs: ${obs}`].filter(Boolean).join(" · ") || null;
+    // encoda duração total no início das notes para o ETA respeitar múltiplos serviços
+    const durTag = totalDurationMin > 0 ? `Dur: ${totalDurationMin}min` : "";
+    const combined = [durTag, barberTag, obs && `Obs: ${obs}`].filter(Boolean).join(" · ") || null;
+    const titles = selectedServices.map((s) => s.title).join(" + ");
     const { error } = await supabase.from("waitlist_entries").insert({
       user_id: userId,
       user_name: userProfile.name,
       user_phone: userProfile.phone || null,
-      service_name: `${selectedService.title} · ${money(selectedService.price)}`,
+      service_name: `${titles} · ${money(totalPrice)}`,
       notes: combined,
     });
     setJoining(false);
@@ -261,7 +296,10 @@ const Fila = () => {
     setFlowOpen(false);
     // sugerir push
     if (push.supported && !push.subscribed) {
-      setTimeout(() => push.subscribe(), 400);
+      setTimeout(() => {
+        if (isIos() && !isStandalone()) { setIosHintOpen(true); return; }
+        push.subscribe();
+      }, 400);
     }
   };
 
@@ -273,7 +311,7 @@ const Fila = () => {
   };
 
   const next = () => {
-    if (step === "service") { if (!selectedService) return toast.info("Escolha um serviço."); setStep(barbers.length > 0 ? "barber" : userId ? "confirm" : "auth"); }
+    if (step === "service") { if (selectedServices.length === 0) return toast.info("Escolha ao menos um serviço."); setStep(barbers.length > 0 ? "barber" : userId ? "confirm" : "auth"); }
     else if (step === "barber") { setStep(userId ? "confirm" : "auth"); }
   };
   const back = () => {
@@ -358,17 +396,17 @@ const Fila = () => {
         {/* Business header card */}
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
           className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c69447]/70 to-transparent" />
           <div className="mx-auto w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
             {logoUrl ? (
               <img src={logoUrl} alt={bizName} className="w-full h-full object-cover" />
             ) : (
-              <Scissors className="w-7 h-7 text-amber-300" />
+              <Scissors className="w-7 h-7 text-[#e5b877]" />
             )}
           </div>
-          <h2 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-amber-300">{bizName}</h2>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-[#e5b877]">{bizName}</h2>
           <div className="mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/60 uppercase">
-            <span className="w-1 h-1 rounded-full bg-amber-400" /> Fila em tempo real
+            <span className="w-1 h-1 rounded-full bg-[#c69447]" /> Fila em tempo real
           </div>
           {bizDesc && <p className="mt-3 text-sm text-white/70 max-w-md mx-auto leading-relaxed">{bizDesc}</p>}
           {insta && (
@@ -384,7 +422,7 @@ const Fila = () => {
           onClick={() => setServicesOpen(true)}
           className="w-full flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] px-4 py-3.5 transition-colors text-left"
         >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-amber-400/25 bg-amber-400/[0.08] text-amber-300 shrink-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-[#c69447]/25 bg-[#c69447]/[0.08] text-[#e5b877] shrink-0">
             <Scissors className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
@@ -392,7 +430,7 @@ const Fila = () => {
             <div className="text-[11px] text-white/50 mt-0.5">Toque para ver preços e durações</div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/25">
+            <span className="text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-md bg-[#c69447]/10 text-[#e5b877] border border-[#c69447]/25">
               {services.length}
             </span>
             <ChevronRight className="w-4 h-4 text-white/40" />
@@ -417,12 +455,12 @@ const Fila = () => {
 
         {/* How to use */}
         {howMsg && (
-          <div className="rounded-2xl border-l-2 border-amber-400/60 border-y border-r border-white/10 bg-white/[0.02] overflow-hidden">
+          <div className="rounded-2xl border-l-2 border-[#c69447]/40 border-y border-r border-white/10 bg-white/[0.02] overflow-hidden">
             <button
               onClick={() => setHowOpen((v) => !v)}
               className="w-full flex items-center gap-2 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors"
             >
-              <HelpCircle className="w-4 h-4 text-amber-300 shrink-0" />
+              <HelpCircle className="w-4 h-4 text-[#e5b877] shrink-0" />
               <span className="flex-1 font-bold text-sm">Como usar esta página</span>
               <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${howOpen ? "rotate-180" : ""}`} />
             </button>
@@ -445,7 +483,7 @@ const Fila = () => {
           </button>
         ) : myEntry ? (
           <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-br from-amber-500/[0.08] to-transparent">
+            className="rounded-3xl p-5 border border-[#c69447]/30 bg-gradient-to-br from-[#c69447]/[0.08] to-transparent">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${statusMeta[myEntry.status].tone}`}>
@@ -456,7 +494,7 @@ const Fila = () => {
                   <>
                     <div className="mt-3 text-[10px] uppercase tracking-widest text-white/40">Sua posição</div>
                     <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-4xl font-black text-amber-300 tabular-nums">{myPosition}º</span>
+                      <span className="text-4xl font-black text-[#e5b877] tabular-nums">{myPosition}º</span>
                       <span className="text-white/50 text-sm">de {waiting.length}</span>
                     </div>
                   </>
@@ -479,7 +517,11 @@ const Fila = () => {
             {/* Push toggle */}
             {push.supported && (
               <button
-                onClick={push.subscribed ? push.unsubscribe : push.subscribe}
+                onClick={() => {
+                  if (push.subscribed) return push.unsubscribe();
+                  if (isIos() && !isStandalone()) { setIosHintOpen(true); return; }
+                  push.subscribe();
+                }}
                 disabled={push.busy}
                 className={`mt-4 w-full h-10 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 border transition-colors ${
                   push.subscribed
@@ -562,19 +604,19 @@ const Fila = () => {
                   return (
                     <motion.div key={e.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                       className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 border transition-colors ${
-                        mine ? "border-amber-500/40 bg-amber-500/[0.06]"
+                        mine ? "border-[#c69447]/40 bg-[#c69447]/[0.08]"
                              : isNext ? "border-white/15 bg-white/[0.04]"
                              : "border-white/10 bg-white/[0.02]"}`}>
                       <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center font-bold tabular-nums text-sm ${
-                        isNext ? "bg-amber-400/15 border border-amber-400/30 text-amber-200"
+                        isNext ? "bg-[#c69447]/20 border border-[#c69447]/30 text-[#e5b877]"
                                : "bg-white/5 border border-white/10 text-white/70"}`}>
                         {i + 1}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold truncate flex items-center gap-1.5">
                           {mine ? "Você" : firstName(e.user_name)}
-                          {isNext && !mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/25 uppercase tracking-wider">Próximo</span>}
-                          {mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/30 uppercase tracking-wider">Você</span>}
+                          {isNext && !mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#c69447]/20 text-[#e5b877] border border-[#c69447]/25 uppercase tracking-wider">Próximo</span>}
+                          {mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#c69447]/20 text-[#e5b877] border border-[#c69447]/30 uppercase tracking-wider">Você</span>}
                         </div>
                         {e.service_name && <div className="text-[11px] text-white/45 truncate">{e.service_name}</div>}
                       </div>
@@ -634,31 +676,44 @@ const Fila = () => {
             subtitle={`Passo ${["service", "barber", "auth", "confirm"].filter((s) => (s !== "auth" || !userId) && (s !== "barber" || barbers.length > 0)).indexOf(step) + 1} de ${["service", "barber", "auth", "confirm"].filter((s) => (s !== "auth" || !userId) && (s !== "barber" || barbers.length > 0)).length}`}>
             {step === "service" && (
               <div className="space-y-2">
+                <div className="text-[11px] text-white/50 px-1 pb-1">
+                  Selecione um ou mais serviços.
+                </div>
                 {services.length === 0 && <div className="text-sm text-white/50 text-center py-8">Nenhum serviço cadastrado.</div>}
                 {services.map((s) => {
-                  const sel = selectedService?.id === s.id;
+                  const sel = selectedServices.some((x) => x.id === s.id);
                   return (
-                    <button key={s.id} onClick={() => setSelectedService(s)}
-                      className={`w-full text-left flex items-center gap-3 rounded-2xl p-4 border transition-all ${
-                        sel ? "border-amber-400/50 bg-amber-400/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${sel ? "border-amber-400/40 bg-amber-400/10 text-amber-300" : "border-white/10 bg-white/5 text-white/60"}`}>
-                        <Scissors className="w-4 h-4" />
+                    <button key={s.id} onClick={() => toggleService(s)}
+                      className={`w-full text-left flex items-start gap-3 rounded-2xl p-4 border transition-all ${
+                        sel ? "border-[#c69447]/50 bg-[#c69447]/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
+                      <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border shrink-0 ${
+                        sel ? "border-[#c69447] bg-[#c69447] text-black" : "border-white/25 bg-white/5"}`}>
+                        {sel && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold truncate">{s.title}</div>
+                        <div className="font-semibold break-words leading-snug">{s.title}</div>
                         {s.duration && <div className="text-[11px] text-white/45 mt-0.5">{s.duration}</div>}
                       </div>
-                      <div className="font-bold text-amber-300 tabular-nums">{money(s.price)}</div>
+                      <div className="font-bold text-[#e5b877] tabular-nums shrink-0 whitespace-nowrap">{money(s.price)}</div>
                     </button>
                   );
                 })}
+                {selectedServices.length > 0 && (
+                  <div className="mt-3 rounded-2xl border border-[#c69447]/25 bg-[#c69447]/[0.05] px-4 py-3 flex items-center justify-between">
+                    <div className="text-xs text-white/70">
+                      <span className="font-bold text-white">{selectedServices.length}</span> selecionado{selectedServices.length > 1 ? "s" : ""}
+                      {totalDurationMin > 0 && <> · ~{totalDurationMin} min</>}
+                    </div>
+                    <div className="font-bold text-[#e5b877] tabular-nums">{money(totalPrice)}</div>
+                  </div>
+                )}
               </div>
             )}
             {step === "barber" && (
               <div className="space-y-2">
                 <button onClick={() => setSelectedBarber(null)}
                   className={`w-full text-left flex items-center gap-3 rounded-2xl p-4 border transition-all ${
-                    !selectedBarber ? "border-amber-400/50 bg-amber-400/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
+                    !selectedBarber ? "border-[#c69447]/40 bg-[#c69447]/[0.08]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
                   <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
                     <Sparkles className="w-4 h-4" />
                   </div>
@@ -672,7 +727,7 @@ const Fila = () => {
                   return (
                     <button key={b.id} onClick={() => setSelectedBarber(b)}
                       className={`w-full text-left flex items-center gap-3 rounded-2xl p-4 border transition-all ${
-                        sel ? "border-amber-400/50 bg-amber-400/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
+                        sel ? "border-[#c69447]/40 bg-[#c69447]/[0.08]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
                       {b.avatar_url ? (
                         <img src={b.avatar_url} alt="" className="w-10 h-10 rounded-xl object-cover" />
                       ) : (
@@ -699,20 +754,31 @@ const Fila = () => {
                 showPass={showPass} setShowPass={setShowPass}
               />
             )}
-            {step === "confirm" && selectedService && (
+            {step === "confirm" && selectedServices.length > 0 && (
               <div className="space-y-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
-                  <Row label="Serviço" value={selectedService.title} extra={money(selectedService.price)} />
-                  {selectedService.duration && <Row label="Duração" value={selectedService.duration} />}
-                  <Row label="Profissional" value={selectedBarber?.name || "Sem preferência"} />
-                  <Row label="Cliente" value={userProfile?.name || "—"} />
-                  <Row label="Posição" value={`${waiting.length + 1}º de ${waiting.length + 1}`} />
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5">
+                  <div className="text-[10px] uppercase tracking-widest text-white/40">Serviços</div>
+                  <ul className="space-y-1.5">
+                    {selectedServices.map((s) => (
+                      <li key={s.id} className="flex items-start justify-between gap-3 text-sm">
+                        <span className="min-w-0 break-words leading-snug text-white/90">{s.title}</span>
+                        <span className="shrink-0 tabular-nums text-[#e5b877] font-semibold">{money(s.price)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="border-t border-white/10 pt-2.5 space-y-2">
+                    {totalDurationMin > 0 && <Row label="Duração total" value={`~${totalDurationMin} min`} />}
+                    <Row label="Profissional" value={selectedBarber?.name || "Sem preferência"} />
+                    <Row label="Cliente" value={userProfile?.name || "—"} />
+                    <Row label="Posição" value={`${waiting.length + 1}º de ${waiting.length + 1}`} />
+                    <Row label="Total" value={money(totalPrice)} />
+                  </div>
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-white/60 mb-1.5 block">Observação (opcional)</label>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
                     placeholder="Alguma preferência ou observação..."
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/50 focus:outline-none text-sm resize-none" />
                 </div>
                 <p className="text-[11px] text-white/40 text-center pt-1">
                   Ao confirmar, você aceita ser chamado por ordem de chegada.
@@ -722,7 +788,7 @@ const Fila = () => {
 
             <div className="p-5 border-t border-white/5">
               {step === "service" && (
-                <button onClick={next} disabled={!selectedService}
+                <button onClick={next} disabled={selectedServices.length === 0}
                   className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:bg-white/5 disabled:text-white/30 transition-colors inline-flex items-center justify-center gap-2">
                   Continuar <ChevronRight className="w-4 h-4" />
                 </button>
@@ -767,7 +833,7 @@ const Fila = () => {
               </div>
               <div className="flex items-center justify-between px-5 h-14 border-b border-white/5">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Scissors className="w-4 h-4 text-amber-300" />
+                  <Scissors className="w-4 h-4 text-[#e5b877]" />
                   <div className="font-bold truncate">Serviços disponíveis</div>
                   <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/60 tabular-nums">{services.length}</span>
                 </div>
@@ -782,12 +848,12 @@ const Fila = () => {
                 )}
                 {services.map((s) => (
                   <div key={s.id}
-                    className="flex items-center gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-amber-400/25 bg-amber-400/[0.08] text-amber-300 shrink-0">
+                    className="flex items-start gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-[#c69447]/25 bg-[#c69447]/[0.08] text-[#e5b877] shrink-0">
                       <Scissors className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold truncate">{s.title}</div>
+                      <div className="font-semibold break-words leading-snug">{s.title}</div>
                       {s.duration && (
                         <div className="text-[11px] text-white/45 mt-0.5 inline-flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {s.duration}
@@ -795,7 +861,7 @@ const Fila = () => {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="font-bold text-amber-300 tabular-nums">{money(s.price)}</div>
+                      <div className="font-bold text-[#e5b877] tabular-nums whitespace-nowrap">{money(s.price)}</div>
                     </div>
                   </div>
                 ))}
@@ -812,7 +878,37 @@ const Fila = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* iOS install hint (Web Push só funciona no iOS após instalar PWA na Tela Inicial) */}
+      <AnimatePresence>
+        {iosHintOpen && (
+          <ModalShell onClose={() => setIosHintOpen(false)} title="Ativar notificações no iPhone">
+            <div className="space-y-3 text-sm text-white/80 leading-relaxed">
+              <p>
+                No iPhone, para receber avisos em tempo real com o app fechado é
+                necessário <b>instalar este site na Tela de Início</b> primeiro.
+              </p>
+              <ol className="space-y-2 pl-4 list-decimal text-white/70">
+                <li>Toque no botão <b>Compartilhar</b> <Share className="inline w-3.5 h-3.5" /> na barra do Safari.</li>
+                <li>Escolha <b>“Adicionar à Tela de Início”</b>.</li>
+                <li>Abra o app pela nova ícone e ative as notificações.</li>
+              </ol>
+              <div className="rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-[11px] text-white/50 flex items-start gap-2">
+                <Smartphone className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                Isso é uma exigência da Apple (iOS 16.4+). No Android, funciona direto no navegador.
+              </div>
+            </div>
+            <div className="p-5 border-t border-white/5">
+              <button onClick={() => setIosHintOpen(false)}
+                className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors">
+                Entendi
+              </button>
+            </div>
+          </ModalShell>
+        )}
+      </AnimatePresence>
     </div>
+
   );
 };
 
@@ -864,25 +960,25 @@ const AuthForm = ({
           <div>
             <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><UserIcon className="w-3 h-3" /> Nome</label>
             <input value={fName} onChange={(e: any) => setFName(e.target.value)} placeholder="João"
-              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><UserIcon className="w-3 h-3" /> Sobrenome</label>
             <input value={fSurname} onChange={(e: any) => setFSurname(e.target.value)} placeholder="Silva"
-              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
           </div>
         </div>
       )}
       <div>
         <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><Phone className="w-3 h-3" /> WhatsApp</label>
         <input type="tel" value={fPhone} onChange={(e: any) => setFPhone(e.target.value)} placeholder="(27) 99999-9999"
-          className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+          className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
       </div>
       <div>
         <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><Lock className="w-3 h-3" /> Senha</label>
         <div className="relative">
           <input type={showPass ? "text" : "password"} value={fPassword} onChange={(e: any) => setFPassword(e.target.value)} placeholder="••••••••"
-            className="w-full h-11 px-3 pr-11 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+            className="w-full h-11 px-3 pr-11 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
           <button onClick={() => setShowPass(!showPass)} type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-white/50 hover:text-white">
             {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -898,7 +994,7 @@ const Row = ({ label, value, extra }: { label: string; value: string; extra?: st
     <span className="text-white/50 text-xs uppercase tracking-wider">{label}</span>
     <span className="font-medium text-right">
       {value}
-      {extra && <span className="ml-2 text-amber-300 font-bold tabular-nums">{extra}</span>}
+      {extra && <span className="ml-2 text-[#e5b877] font-bold tabular-nums">{extra}</span>}
     </span>
   </div>
 );
