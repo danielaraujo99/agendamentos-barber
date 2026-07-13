@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useWebPush } from "@/hooks/useWebPush";
+import InstallAppButton from "@/components/InstallAppButton";
 
 type WaitStatus = "waiting" | "calling" | "in_service" | "done" | "cancelled" | "no_show";
 
@@ -339,16 +340,19 @@ const Fila = () => {
       </div>
 
       <div className="sticky top-0 z-30 backdrop-blur-xl border-b border-white/5 bg-black/50">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
           <Link to="/" className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors">
             <ChevronLeft className="w-4 h-4" /> Voltar
           </Link>
-          <div className="flex items-center gap-2 text-[11px] text-white/50 font-medium tracking-wide">
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-            </span>
-            AO VIVO
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 text-[11px] text-white/50 font-medium tracking-wide">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-70" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+              </span>
+              AO VIVO
+            </div>
+            <InstallAppButton />
           </div>
         </div>
       </div>
