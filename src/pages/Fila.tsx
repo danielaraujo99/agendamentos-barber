@@ -209,7 +209,7 @@ const Fila = () => {
     if (!isOpen) return;
     if (myEntry) { toast.info("Você já está na fila."); return; }
     setStep("service");
-    setSelectedService(null);
+    setSelectedServices([]);
     setSelectedBarber(null);
     setNotes("");
     setFlowOpen(true);
@@ -220,6 +220,21 @@ const Fila = () => {
     setFName(""); setFSurname(""); setFPhone(""); setFPassword("");
     setAuthOnlyOpen(true);
   };
+
+  const toggleService = (svc: Service) => {
+    setSelectedServices((prev) =>
+      prev.some((s) => s.id === svc.id) ? prev.filter((s) => s.id !== svc.id) : [...prev, svc]
+    );
+  };
+
+  const totalPrice = useMemo(
+    () => selectedServices.reduce((acc, s) => acc + Number(s.price || 0), 0),
+    [selectedServices]
+  );
+  const totalDurationMin = useMemo(
+    () => selectedServices.reduce((acc, s) => acc + (parseMinutes(s.duration) || 0), 0),
+    [selectedServices]
+  );
 
   const handleAuth = async (afterAuth: () => void) => {
     const digits = fPhone.replace(/\D/g, "");
@@ -251,16 +266,19 @@ const Fila = () => {
   };
 
   const confirmJoin = async () => {
-    if (!userId || !userProfile || !selectedService) return;
+    if (!userId || !userProfile || selectedServices.length === 0) return;
     setJoining(true);
     const barberTag = selectedBarber ? `Barbeiro: ${selectedBarber.name}` : "";
     const obs = notes.trim();
-    const combined = [barberTag, obs && `Obs: ${obs}`].filter(Boolean).join(" · ") || null;
+    // encoda duração total no início das notes para o ETA respeitar múltiplos serviços
+    const durTag = totalDurationMin > 0 ? `Dur: ${totalDurationMin}min` : "";
+    const combined = [durTag, barberTag, obs && `Obs: ${obs}`].filter(Boolean).join(" · ") || null;
+    const titles = selectedServices.map((s) => s.title).join(" + ");
     const { error } = await supabase.from("waitlist_entries").insert({
       user_id: userId,
       user_name: userProfile.name,
       user_phone: userProfile.phone || null,
-      service_name: `${selectedService.title} · ${money(selectedService.price)}`,
+      service_name: `${titles} · ${money(totalPrice)}`,
       notes: combined,
     });
     setJoining(false);
@@ -269,7 +287,10 @@ const Fila = () => {
     setFlowOpen(false);
     // sugerir push
     if (push.supported && !push.subscribed) {
-      setTimeout(() => push.subscribe(), 400);
+      setTimeout(() => {
+        if (isIos() && !isStandalone()) { setIosHintOpen(true); return; }
+        push.subscribe();
+      }, 400);
     }
   };
 
@@ -281,7 +302,7 @@ const Fila = () => {
   };
 
   const next = () => {
-    if (step === "service") { if (!selectedService) return toast.info("Escolha um serviço."); setStep(barbers.length > 0 ? "barber" : userId ? "confirm" : "auth"); }
+    if (step === "service") { if (selectedServices.length === 0) return toast.info("Escolha ao menos um serviço."); setStep(barbers.length > 0 ? "barber" : userId ? "confirm" : "auth"); }
     else if (step === "barber") { setStep(userId ? "confirm" : "auth"); }
   };
   const back = () => {
