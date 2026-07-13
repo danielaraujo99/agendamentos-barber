@@ -517,7 +517,11 @@ const Fila = () => {
             {/* Push toggle */}
             {push.supported && (
               <button
-                onClick={push.subscribed ? push.unsubscribe : push.subscribe}
+                onClick={() => {
+                  if (push.subscribed) return push.unsubscribe();
+                  if (isIos() && !isStandalone()) { setIosHintOpen(true); return; }
+                  push.subscribe();
+                }}
                 disabled={push.busy}
                 className={`mt-4 w-full h-10 rounded-xl text-xs font-semibold inline-flex items-center justify-center gap-2 border transition-colors ${
                   push.subscribed
