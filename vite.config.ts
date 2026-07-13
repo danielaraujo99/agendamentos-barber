@@ -76,5 +76,30 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: "es2022",
+    cssCodeSplit: true,
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1200,
+    minify: "esbuild",
+    sourcemap: false,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("react-dom") || id.match(/[\\/]react[\\/]/) || id.includes("scheduler"))
+            return "react-vendor";
+          if (id.includes("react-router")) return "router";
+          if (id.includes("@tanstack/react-query")) return "query";
+          if (id.includes("@supabase")) return "supabase";
+          if (id.includes("@radix-ui")) return "radix";
+          if (id.includes("lucide-react")) return "icons";
+          if (id.includes("maplibre-gl")) return "maplibre";
+          if (id.includes("recharts") || id.includes("d3-")) return "charts";
+          if (id.includes("date-fns") || id.includes("dayjs")) return "date";
+          if (id.includes("framer-motion")) return "motion";
+          if (id.includes("zod") || id.includes("react-hook-form")) return "forms";
+          return "vendor";
+        },
+      },
+    },
   },
 }));
