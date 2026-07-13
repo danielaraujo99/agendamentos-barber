@@ -98,12 +98,12 @@ const InstallAppButton = () => {
 
       {open && (
         <div
-          className="fixed inset-0 z-[120] flex items-end sm:items-center justify-center p-3 sm:p-4"
+          className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
           style={{ background: "hsl(0 0% 0% / 0.72)", backdropFilter: "blur(8px)" }}
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full sm:max-w-md rounded-3xl overflow-hidden"
+            className="w-full sm:max-w-md rounded-3xl overflow-hidden my-auto max-h-[calc(100dvh-1.5rem)] overflow-y-auto"
             style={{
               background: "linear-gradient(180deg, hsl(220 25% 9%), hsl(220 25% 6%))",
               border: "1px solid hsl(35 55% 52% / 0.3)",
