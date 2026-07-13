@@ -114,8 +114,6 @@ const Fila = () => {
   const [fSurname, setFSurname] = useState("");
   const [fPhone, setFPhone] = useState("");
   const [fPassword, setFPassword] = useState("");
-  const [fPhone, setFPhone] = useState("");
-  const [fPassword, setFPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
   const [authLoading, setAuthLoading] = useState(false);
 
