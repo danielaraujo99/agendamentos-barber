@@ -115,10 +115,11 @@ const Reviews = () => {
           </p>
         </div>
         <button
-          onClick={() => setConfigOpen(true)}
-          aria-label="Configurações de avaliação"
-          title="Configurações"
-          className="w-10 h-10 inline-flex items-center justify-center rounded-lg border border-border bg-card/40 text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
+          type="button"
+          disabled
+          aria-disabled="true"
+          title="Configurações (em breve)"
+          className="w-10 h-10 inline-flex items-center justify-center rounded-lg border border-border bg-card/40 text-muted-foreground opacity-40 cursor-not-allowed"
         >
           <SettingsIcon className="w-4 h-4" />
         </button>

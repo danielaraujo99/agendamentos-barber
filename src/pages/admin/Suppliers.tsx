@@ -108,7 +108,17 @@ const Suppliers = () => {
       </div>
 
       <ModuleSection title="Fornecedores"
-        actions={<PrimaryButton onClick={openCreate}><Plus className="w-3.5 h-3.5" /> Novo</PrimaryButton>}>
+        actions={
+          <button
+            type="button"
+            disabled
+            aria-disabled="true"
+            title="Cadastro em breve"
+            className="inline-flex items-center gap-1.5 px-3 h-8 rounded-lg text-xs font-semibold border border-border bg-card/40 text-muted-foreground opacity-40 cursor-not-allowed"
+          >
+            <Plus className="w-3.5 h-3.5" /> Novo
+          </button>
+        }>
         {list.length === 0 ? (
           <EmptyState icon={<Building2 className="w-5 h-5" />} title="Nenhum fornecedor" description="Cadastre fornecedores para vincular a itens de estoque." />
         ) : (
