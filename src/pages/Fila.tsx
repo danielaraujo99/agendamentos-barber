@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Link } from "react-router-dom";
 import {
-  Users, Clock, X, CheckCircle2, Loader2, Bell, BellOff, ChevronLeft, ChevronRight,
+  Users, Clock, X, CheckCircle2, Loader2, Bell, BellOff, ChevronRight,
   Scissors, Instagram, Eye, EyeOff, Phone, Lock, User as UserIcon, ArrowLeft,
-  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer, Download,
+  Sparkles, LogOut, LogIn, Info, ChevronDown, HelpCircle, AlertTriangle, Timer,
   Check, Share, Smartphone,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -340,10 +339,7 @@ const Fila = () => {
       </div>
 
       <div className="sticky top-0 z-30 backdrop-blur-xl border-b border-white/5 bg-black/50">
-        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-between gap-2">
-          <Link to="/" className="flex items-center gap-1.5 text-sm text-white/60 hover:text-white transition-colors">
-            <ChevronLeft className="w-4 h-4" /> Voltar
-          </Link>
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center justify-end gap-2">
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-2 text-[11px] text-white/50 font-medium tracking-wide">
               <span className="relative flex h-2 w-2">
@@ -639,9 +635,6 @@ const Fila = () => {
           A ordem de chegada é sempre respeitada. Você será chamado assim que for sua vez.
         </p>
       </div>
-
-      <PwaInstallBanner />
-
 
       {/* Auth-only modal */}
       <AnimatePresence>
@@ -1071,69 +1064,6 @@ const EtaCountdown = ({ endTs, userId, onNotify }: {
       </div>
       <div className={`mt-1 text-5xl font-black tabular-nums tracking-tight ${palette.num}`}>
         {String(mm).padStart(2, "0")}:{String(ss).padStart(2, "0")}
-      </div>
-    </motion.div>
-  );
-};
-
-// ---------- Banner PWA de instalação ----------
-const PwaInstallBanner = () => {
-  const [prompt, setPrompt] = useState<any>(null);
-  const [visible, setVisible] = useState(false);
-
-  useEffect(() => {
-    const standalone =
-      window.matchMedia?.("(display-mode: standalone)").matches ||
-      (window.navigator as any).standalone === true;
-    if (standalone) return;
-
-    const dismissed = Number(localStorage.getItem("pwa_banner_dismissed_at") || 0);
-    const days = (Date.now() - dismissed) / (1000 * 60 * 60 * 24);
-    if (dismissed && days < 7) return;
-
-    const handler = (e: any) => {
-      e.preventDefault();
-      setPrompt(e);
-      setVisible(true);
-    };
-    window.addEventListener("beforeinstallprompt", handler);
-    return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
-
-  const install = async () => {
-    if (!prompt) return;
-    prompt.prompt();
-    await prompt.userChoice;
-    setPrompt(null);
-    setVisible(false);
-  };
-  const dismiss = () => {
-    localStorage.setItem("pwa_banner_dismissed_at", String(Date.now()));
-    setVisible(false);
-  };
-
-  if (!visible) return null;
-  return (
-    <motion.div initial={{ y: 100, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 100, opacity: 0 }}
-      className="fixed bottom-3 left-3 right-3 sm:left-1/2 sm:-translate-x-1/2 sm:right-auto sm:w-[440px] z-40">
-      <div className="rounded-2xl border border-white/10 bg-[hsl(220_25%_6%)]/95 backdrop-blur-xl shadow-2xl p-4 flex items-center gap-3">
-        <div className="w-11 h-11 rounded-xl bg-[#c69447]/15 border border-[#c69447]/30 flex items-center justify-center shrink-0">
-          <Download className="w-5 h-5 text-[#e5b877]" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <div className="text-sm font-bold text-white">Instalar aplicativo</div>
-          <div className="text-[11px] text-white/60 leading-snug mt-0.5">
-            Receba notificações em tempo real e acompanhe sua posição na fila.
-          </div>
-        </div>
-        <button onClick={dismiss}
-          className="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center text-white/50 hover:text-white hover:bg-white/5">
-          <X className="w-4 h-4" />
-        </button>
-        <button onClick={install}
-          className="shrink-0 h-9 px-3.5 rounded-lg text-xs font-bold text-black bg-[#c69447] hover:bg-[#d4a656] transition-colors">
-          Instalar
-        </button>
       </div>
     </motion.div>
   );

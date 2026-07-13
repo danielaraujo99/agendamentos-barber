@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Download, X, Share, Plus, MoreVertical, CheckCircle2, Bell, Zap, Smartphone } from "lucide-react";
+import { isPwaStandalone } from "@/lib/pwa";
 
 type BIPEvent = Event & {
   prompt: () => Promise<void>;
@@ -17,15 +18,8 @@ const ua = () => (typeof navigator !== "undefined" ? navigator.userAgent || "" :
 const isIOS = () => /iphone|ipad|ipod/i.test(ua()) && !/crios|fxios/i.test(ua());
 const isSamsungBrowser = () => /samsungbrowser/i.test(ua());
 const isFirefox = () => /firefox|fxios/i.test(ua());
-const isStandalone = () =>
-  typeof window !== "undefined" &&
-  (window.matchMedia("(display-mode: standalone)").matches ||
-    // @ts-ignore
-    window.navigator.standalone === true ||
-    document.referrer.startsWith("android-app://"));
-
 const InstallAppButton = () => {
-  const [installed, setInstalled] = useState<boolean>(() => (typeof window !== "undefined" ? isStandalone() : true));
+  const [installed, setInstalled] = useState<boolean>(() => (typeof window !== "undefined" ? isPwaStandalone() : true));
   const [deferred, setDeferred] = useState<BIPEvent | null>(
     typeof window !== "undefined" ? window.__deferredInstallPrompt ?? null : null,
   );
@@ -48,7 +42,7 @@ const InstallAppButton = () => {
       setOpen(false);
     };
     const mq = window.matchMedia("(display-mode: standalone)");
-    const onMq = () => setInstalled(isStandalone());
+    const onMq = () => setInstalled(isPwaStandalone());
 
     window.addEventListener("beforeinstallprompt", onPrompt);
     window.addEventListener("appinstalled", onInstalled);
@@ -61,7 +55,7 @@ const InstallAppButton = () => {
     };
   }, [installed]);
 
-  if (installed) return null;
+  if (installed || !deferred) return null;
 
   const doInstall = async () => {
     if (deferred) {

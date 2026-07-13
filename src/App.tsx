@@ -14,7 +14,6 @@ import MemberRouteGuard from "./components/MemberRouteGuard";
 import LoginRedirectGuard from "./components/LoginRedirectGuard";
 import { installAdminMysqlBridge } from "./lib/adminMysqlSession";
 import { installTenantPublicBridge } from "./lib/tenantPublicBridge";
-import InstallPWA from "./components/InstallPWA";
 
 // Lazy: rotas secundárias e admin
 const NotFound = lazy(() => import("./pages/NotFound"));
@@ -102,7 +101,6 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <InstallPWA />
       <BrowserRouter>
         <ThemeProvider>
           <StoreThemeProvider>
