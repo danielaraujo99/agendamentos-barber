@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { Download, X, Share, Plus, MoreVertical, CheckCircle2, Bell, Zap, Smartphone } from "lucide-react";
 
 type BIPEvent = Event & {
@@ -96,7 +97,8 @@ const InstallAppButton = () => {
         Baixar app
       </button>
 
-      {open && (
+      {open &&
+        createPortal(
         <div
           className="fixed inset-0 z-[120] flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
           style={{ background: "hsl(0 0% 0% / 0.72)", backdropFilter: "blur(8px)" }}
@@ -231,7 +233,8 @@ const InstallAppButton = () => {
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
