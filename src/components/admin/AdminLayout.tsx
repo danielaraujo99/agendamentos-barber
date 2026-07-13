@@ -71,6 +71,7 @@ const PATH_PERMISSION: Record<string, string> = {
   "/admin/credit": "credit",
   "/admin/inventory": "inventory",
   "/admin/suppliers": "inventory",
+  "/admin/fila": "fila",
 };
 
 const AdminLayout = () => {
