@@ -741,20 +741,31 @@ const Fila = () => {
                 showPass={showPass} setShowPass={setShowPass}
               />
             )}
-            {step === "confirm" && selectedService && (
+            {step === "confirm" && selectedServices.length > 0 && (
               <div className="space-y-3">
-                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-3">
-                  <Row label="Serviço" value={selectedService.title} extra={money(selectedService.price)} />
-                  {selectedService.duration && <Row label="Duração" value={selectedService.duration} />}
-                  <Row label="Profissional" value={selectedBarber?.name || "Sem preferência"} />
-                  <Row label="Cliente" value={userProfile?.name || "—"} />
-                  <Row label="Posição" value={`${waiting.length + 1}º de ${waiting.length + 1}`} />
+                <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 space-y-2.5">
+                  <div className="text-[10px] uppercase tracking-widest text-white/40">Serviços</div>
+                  <ul className="space-y-1.5">
+                    {selectedServices.map((s) => (
+                      <li key={s.id} className="flex items-start justify-between gap-3 text-sm">
+                        <span className="min-w-0 break-words leading-snug text-white/90">{s.title}</span>
+                        <span className="shrink-0 tabular-nums text-[#e5b877] font-semibold">{money(s.price)}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="border-t border-white/10 pt-2.5 space-y-2">
+                    {totalDurationMin > 0 && <Row label="Duração total" value={`~${totalDurationMin} min`} />}
+                    <Row label="Profissional" value={selectedBarber?.name || "Sem preferência"} />
+                    <Row label="Cliente" value={userProfile?.name || "—"} />
+                    <Row label="Posição" value={`${waiting.length + 1}º de ${waiting.length + 1}`} />
+                    <Row label="Total" value={money(totalPrice)} />
+                  </div>
                 </div>
                 <div>
                   <label className="text-[11px] font-semibold text-white/60 mb-1.5 block">Observação (opcional)</label>
                   <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2}
                     placeholder="Alguma preferência ou observação..."
-                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm resize-none" />
+                    className="w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/50 focus:outline-none text-sm resize-none" />
                 </div>
                 <p className="text-[11px] text-white/40 text-center pt-1">
                   Ao confirmar, você aceita ser chamado por ordem de chegada.
@@ -764,7 +775,7 @@ const Fila = () => {
 
             <div className="p-5 border-t border-white/5">
               {step === "service" && (
-                <button onClick={next} disabled={!selectedService}
+                <button onClick={next} disabled={selectedServices.length === 0}
                   className="w-full h-12 rounded-xl font-bold text-black bg-[#c69447] hover:bg-[#d4a656] disabled:bg-white/5 disabled:text-white/30 transition-colors inline-flex items-center justify-center gap-2">
                   Continuar <ChevronRight className="w-4 h-4" />
                 </button>
