@@ -60,7 +60,7 @@ interface Settings {
 }
 
 const statusMeta: Record<WaitStatus, { label: string; tone: string }> = {
-  waiting: { label: "Aguardando", tone: "text-[#e5b877] bg-[#c69447]/10 border-amber-500/25" },
+  waiting: { label: "Aguardando", tone: "text-[#e5b877] bg-[#c69447]/10 border-[#c69447]/25" },
   calling: { label: "Chamando", tone: "text-emerald-200 bg-emerald-500/10 border-emerald-500/30" },
   in_service: { label: "Em atendimento", tone: "text-sky-200 bg-sky-500/10 border-sky-500/25" },
   done: { label: "Concluído", tone: "text-white/50 bg-white/5 border-white/10" },
@@ -396,7 +396,7 @@ const Fila = () => {
         {/* Business header card */}
         <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
           className="relative rounded-3xl border border-white/10 bg-gradient-to-b from-white/[0.04] to-white/[0.01] p-6 text-center overflow-hidden">
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-400/60 to-transparent" />
+          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#c69447]/70 to-transparent" />
           <div className="mx-auto w-20 h-20 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
             {logoUrl ? (
               <img src={logoUrl} alt={bizName} className="w-full h-full object-cover" />
@@ -406,7 +406,7 @@ const Fila = () => {
           </div>
           <h2 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-[#e5b877]">{bizName}</h2>
           <div className="mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/60 uppercase">
-            <span className="w-1 h-1 rounded-full bg-amber-400" /> Fila em tempo real
+            <span className="w-1 h-1 rounded-full bg-[#c69447]" /> Fila em tempo real
           </div>
           {bizDesc && <p className="mt-3 text-sm text-white/70 max-w-md mx-auto leading-relaxed">{bizDesc}</p>}
           {insta && (
@@ -483,7 +483,7 @@ const Fila = () => {
           </button>
         ) : myEntry ? (
           <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-3xl p-5 border border-[#c69447]/30 bg-gradient-to-br from-amber-500/[0.08] to-transparent">
+            className="rounded-3xl p-5 border border-[#c69447]/30 bg-gradient-to-br from-[#c69447]/[0.08] to-transparent">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${statusMeta[myEntry.status].tone}`}>
