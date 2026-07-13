@@ -230,8 +230,10 @@ const AdminFila = () => {
           { label: "Em atendimento", value: active.length, color: "hsl(200 85% 70%)" },
           { label: "Total ativos", value: entries.length, color: "hsl(0 0% 95%)" },
         ].map((k) => (
-          <div key={k.label} className="rounded-2xl p-4" style={surface}>
-            <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{k.label}</div>
+          <div key={k.label} className="rounded-2xl p-4 min-h-[100px] flex flex-col justify-between" style={surface}>
+            <div className="min-h-[28px] text-[9px] sm:text-[10px] leading-tight uppercase tracking-widest text-muted-foreground">
+              {k.label}
+            </div>
             <div className="text-2xl sm:text-3xl font-bold tabular-nums mt-1" style={{ color: k.color }}>{k.value}</div>
           </div>
         ))}

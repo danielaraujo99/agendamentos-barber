@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { readyPwaServiceWorker } from "@/lib/pwa";
 
 const STORAGE_KEY = "push_notifications_enabled";
 const SEEN_KEY = "push_notifications_seen";
@@ -42,8 +43,7 @@ export function usePushNotifications(email: string | null | undefined) {
     }
     setPermission(Notification.permission as PermissionState);
 
-    navigator.serviceWorker
-      .register("/notifications-sw.js")
+    readyPwaServiceWorker()
       .then((reg) => {
         swReg.current = reg;
       })

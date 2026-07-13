@@ -43,8 +43,8 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            urlPattern: ({ request, url }) =>
-              url.origin === self.location.origin && ["script", "style", "worker"].includes(request.destination),
+            urlPattern: ({ request, sameOrigin }) =>
+              sameOrigin && ["script", "style", "worker"].includes(request.destination),
             handler: "CacheFirst",
             options: {
               cacheName: "genesis-app-assets",
@@ -52,8 +52,7 @@ export default defineConfig(({ mode }) => ({
             },
           },
           {
-            urlPattern: ({ request, url }) =>
-              url.origin === self.location.origin && ["image", "font"].includes(request.destination),
+            urlPattern: ({ request, sameOrigin }) => sameOrigin && ["image", "font"].includes(request.destination),
             handler: "CacheFirst",
             options: {
               cacheName: "genesis-static-assets",

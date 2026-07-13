@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { VAPID_PUBLIC_KEY, urlBase64ToUint8Array } from "@/lib/vapid";
+import { readyPwaServiceWorker } from "@/lib/pwa";
 
 type Perm = "default" | "granted" | "denied" | "unsupported";
 
@@ -19,7 +20,8 @@ export function useWebPush(userId: string | null) {
     setPermission(Notification.permission as Perm);
     (async () => {
       try {
-        const reg = await navigator.serviceWorker.register("/notifications-sw.js");
+        const reg = await readyPwaServiceWorker();
+        if (!reg) return;
         const sub = await reg.pushManager.getSubscription();
         setSubscribed(!!sub);
       } catch (e) { console.error("SW register", e); }
@@ -33,7 +35,8 @@ export function useWebPush(userId: string | null) {
       const perm = await Notification.requestPermission();
       setPermission(perm as Perm);
       if (perm !== "granted") return false;
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await readyPwaServiceWorker();
+      if (!reg) return false;
       let sub = await reg.pushManager.getSubscription();
       if (!sub) {
         sub = await reg.pushManager.subscribe({
@@ -61,7 +64,8 @@ export function useWebPush(userId: string | null) {
     if (!supported) return;
     setBusy(true);
     try {
-      const reg = await navigator.serviceWorker.ready;
+      const reg = await readyPwaServiceWorker();
+      if (!reg) return;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
         await supabase.from("push_subscriptions").delete().eq("endpoint", sub.endpoint);
