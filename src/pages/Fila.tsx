@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useWebPush } from "@/hooks/useWebPush";
+import InstallAppButton from "@/components/InstallAppButton";
 
 type WaitStatus = "waiting" | "calling" | "in_service" | "done" | "cancelled" | "no_show";
 
