@@ -60,7 +60,7 @@ interface Settings {
 }
 
 const statusMeta: Record<WaitStatus, { label: string; tone: string }> = {
-  waiting: { label: "Aguardando", tone: "text-amber-200 bg-amber-500/10 border-amber-500/25" },
+  waiting: { label: "Aguardando", tone: "text-[#e5b877] bg-[#c69447]/10 border-amber-500/25" },
   calling: { label: "Chamando", tone: "text-emerald-200 bg-emerald-500/10 border-emerald-500/30" },
   in_service: { label: "Em atendimento", tone: "text-sky-200 bg-sky-500/10 border-sky-500/25" },
   done: { label: "Concluído", tone: "text-white/50 bg-white/5 border-white/10" },
@@ -401,10 +401,10 @@ const Fila = () => {
             {logoUrl ? (
               <img src={logoUrl} alt={bizName} className="w-full h-full object-cover" />
             ) : (
-              <Scissors className="w-7 h-7 text-amber-300" />
+              <Scissors className="w-7 h-7 text-[#e5b877]" />
             )}
           </div>
-          <h2 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-amber-300">{bizName}</h2>
+          <h2 className="mt-3 text-2xl sm:text-3xl font-black tracking-tight text-[#e5b877]">{bizName}</h2>
           <div className="mt-1.5 inline-flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-white/60 uppercase">
             <span className="w-1 h-1 rounded-full bg-amber-400" /> Fila em tempo real
           </div>
@@ -422,7 +422,7 @@ const Fila = () => {
           onClick={() => setServicesOpen(true)}
           className="w-full flex items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.02] hover:bg-white/[0.04] px-4 py-3.5 transition-colors text-left"
         >
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-amber-400/25 bg-amber-400/[0.08] text-amber-300 shrink-0">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-[#c69447]/25 bg-[#c69447]/[0.08] text-[#e5b877] shrink-0">
             <Scissors className="w-4 h-4" />
           </div>
           <div className="flex-1 min-w-0">
@@ -430,7 +430,7 @@ const Fila = () => {
             <div className="text-[11px] text-white/50 mt-0.5">Toque para ver preços e durações</div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-md bg-amber-400/10 text-amber-300 border border-amber-400/25">
+            <span className="text-[11px] font-bold tabular-nums px-2 py-0.5 rounded-md bg-[#c69447]/10 text-[#e5b877] border border-[#c69447]/25">
               {services.length}
             </span>
             <ChevronRight className="w-4 h-4 text-white/40" />
@@ -455,12 +455,12 @@ const Fila = () => {
 
         {/* How to use */}
         {howMsg && (
-          <div className="rounded-2xl border-l-2 border-amber-400/60 border-y border-r border-white/10 bg-white/[0.02] overflow-hidden">
+          <div className="rounded-2xl border-l-2 border-[#c69447]/40 border-y border-r border-white/10 bg-white/[0.02] overflow-hidden">
             <button
               onClick={() => setHowOpen((v) => !v)}
               className="w-full flex items-center gap-2 px-4 py-3.5 text-left hover:bg-white/[0.02] transition-colors"
             >
-              <HelpCircle className="w-4 h-4 text-amber-300 shrink-0" />
+              <HelpCircle className="w-4 h-4 text-[#e5b877] shrink-0" />
               <span className="flex-1 font-bold text-sm">Como usar esta página</span>
               <ChevronDown className={`w-4 h-4 text-white/50 transition-transform ${howOpen ? "rotate-180" : ""}`} />
             </button>
@@ -483,7 +483,7 @@ const Fila = () => {
           </button>
         ) : myEntry ? (
           <motion.div layout initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-            className="rounded-3xl p-5 border border-amber-500/30 bg-gradient-to-br from-amber-500/[0.08] to-transparent">
+            className="rounded-3xl p-5 border border-[#c69447]/30 bg-gradient-to-br from-amber-500/[0.08] to-transparent">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium border ${statusMeta[myEntry.status].tone}`}>
@@ -494,7 +494,7 @@ const Fila = () => {
                   <>
                     <div className="mt-3 text-[10px] uppercase tracking-widest text-white/40">Sua posição</div>
                     <div className="flex items-baseline gap-2 mt-0.5">
-                      <span className="text-4xl font-black text-amber-300 tabular-nums">{myPosition}º</span>
+                      <span className="text-4xl font-black text-[#e5b877] tabular-nums">{myPosition}º</span>
                       <span className="text-white/50 text-sm">de {waiting.length}</span>
                     </div>
                   </>
@@ -600,19 +600,19 @@ const Fila = () => {
                   return (
                     <motion.div key={e.id} layout initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                       className={`flex items-center gap-3 rounded-2xl px-3.5 py-3 border transition-colors ${
-                        mine ? "border-amber-500/40 bg-amber-500/[0.06]"
+                        mine ? "border-[#c69447]/40 bg-[#c69447]/[0.08]"
                              : isNext ? "border-white/15 bg-white/[0.04]"
                              : "border-white/10 bg-white/[0.02]"}`}>
                       <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center font-bold tabular-nums text-sm ${
-                        isNext ? "bg-amber-400/15 border border-amber-400/30 text-amber-200"
+                        isNext ? "bg-[#c69447]/20 border border-[#c69447]/30 text-[#e5b877]"
                                : "bg-white/5 border border-white/10 text-white/70"}`}>
                         {i + 1}
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="font-semibold truncate flex items-center gap-1.5">
                           {mine ? "Você" : firstName(e.user_name)}
-                          {isNext && !mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/15 text-amber-200 border border-amber-400/25 uppercase tracking-wider">Próximo</span>}
-                          {mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-amber-400/20 text-amber-200 border border-amber-400/30 uppercase tracking-wider">Você</span>}
+                          {isNext && !mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#c69447]/20 text-[#e5b877] border border-[#c69447]/25 uppercase tracking-wider">Próximo</span>}
+                          {mine && <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-[#c69447]/20 text-[#e5b877] border border-[#c69447]/30 uppercase tracking-wider">Você</span>}
                         </div>
                         {e.service_name && <div className="text-[11px] text-white/45 truncate">{e.service_name}</div>}
                       </div>
@@ -709,7 +709,7 @@ const Fila = () => {
               <div className="space-y-2">
                 <button onClick={() => setSelectedBarber(null)}
                   className={`w-full text-left flex items-center gap-3 rounded-2xl p-4 border transition-all ${
-                    !selectedBarber ? "border-amber-400/50 bg-amber-400/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
+                    !selectedBarber ? "border-[#c69447]/40 bg-[#c69447]/[0.08]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
                   <div className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-white/60">
                     <Sparkles className="w-4 h-4" />
                   </div>
@@ -723,7 +723,7 @@ const Fila = () => {
                   return (
                     <button key={b.id} onClick={() => setSelectedBarber(b)}
                       className={`w-full text-left flex items-center gap-3 rounded-2xl p-4 border transition-all ${
-                        sel ? "border-amber-400/50 bg-amber-400/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
+                        sel ? "border-[#c69447]/40 bg-[#c69447]/[0.08]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
                       {b.avatar_url ? (
                         <img src={b.avatar_url} alt="" className="w-10 h-10 rounded-xl object-cover" />
                       ) : (
@@ -829,7 +829,7 @@ const Fila = () => {
               </div>
               <div className="flex items-center justify-between px-5 h-14 border-b border-white/5">
                 <div className="flex items-center gap-2 min-w-0">
-                  <Scissors className="w-4 h-4 text-amber-300" />
+                  <Scissors className="w-4 h-4 text-[#e5b877]" />
                   <div className="font-bold truncate">Serviços disponíveis</div>
                   <span className="text-[11px] px-1.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-white/60 tabular-nums">{services.length}</span>
                 </div>
@@ -845,7 +845,7 @@ const Fila = () => {
                 {services.map((s) => (
                   <div key={s.id}
                     className="flex items-center gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
-                    <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-amber-400/25 bg-amber-400/[0.08] text-amber-300 shrink-0">
+                    <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-[#c69447]/25 bg-[#c69447]/[0.08] text-[#e5b877] shrink-0">
                       <Scissors className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
@@ -857,7 +857,7 @@ const Fila = () => {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="font-bold text-amber-300 tabular-nums">{money(s.price)}</div>
+                      <div className="font-bold text-[#e5b877] tabular-nums">{money(s.price)}</div>
                     </div>
                   </div>
                 ))}
@@ -926,25 +926,25 @@ const AuthForm = ({
           <div>
             <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><UserIcon className="w-3 h-3" /> Nome</label>
             <input value={fName} onChange={(e: any) => setFName(e.target.value)} placeholder="João"
-              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
           </div>
           <div>
             <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><UserIcon className="w-3 h-3" /> Sobrenome</label>
             <input value={fSurname} onChange={(e: any) => setFSurname(e.target.value)} placeholder="Silva"
-              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+              className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
           </div>
         </div>
       )}
       <div>
         <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><Phone className="w-3 h-3" /> WhatsApp</label>
         <input type="tel" value={fPhone} onChange={(e: any) => setFPhone(e.target.value)} placeholder="(27) 99999-9999"
-          className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+          className="w-full h-11 px-3 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
       </div>
       <div>
         <label className="text-[11px] font-semibold text-white/60 flex items-center gap-1 mb-1.5"><Lock className="w-3 h-3" /> Senha</label>
         <div className="relative">
           <input type={showPass ? "text" : "password"} value={fPassword} onChange={(e: any) => setFPassword(e.target.value)} placeholder="••••••••"
-            className="w-full h-11 px-3 pr-11 rounded-xl bg-white/5 border border-white/10 focus:border-amber-400/50 focus:outline-none text-sm" />
+            className="w-full h-11 px-3 pr-11 rounded-xl bg-white/5 border border-white/10 focus:border-[#c69447]/40 focus:outline-none text-sm" />
           <button onClick={() => setShowPass(!showPass)} type="button"
             className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-white/50 hover:text-white">
             {showPass ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -960,7 +960,7 @@ const Row = ({ label, value, extra }: { label: string; value: string; extra?: st
     <span className="text-white/50 text-xs uppercase tracking-wider">{label}</span>
     <span className="font-medium text-right">
       {value}
-      {extra && <span className="ml-2 text-amber-300 font-bold tabular-nums">{extra}</span>}
+      {extra && <span className="ml-2 text-[#e5b877] font-bold tabular-nums">{extra}</span>}
     </span>
   </div>
 );
