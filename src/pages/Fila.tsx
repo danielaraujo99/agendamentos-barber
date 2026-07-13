@@ -26,9 +26,15 @@ interface Entry {
   called_at?: string | null;
 }
 
-// gold suave (menos amarelo, mais dourado refinado)
-const GOLD = "#c69447";
-const GOLD_SOFT = "#d4a656";
+// gold suave (não neon)
+const GOLD = "#b8863d";
+const GOLD_SOFT = "#c69447";
+const isIos = () =>
+  typeof navigator !== "undefined" && /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = () =>
+  typeof window !== "undefined" &&
+  (window.matchMedia?.("(display-mode: standalone)").matches ||
+    (window.navigator as any).standalone === true);
 const parseMinutes = (txt: string | null | undefined): number => {
   if (!txt) return 0;
   const m = String(txt).match(/(\d+)\s*h/i);
