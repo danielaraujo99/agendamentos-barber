@@ -102,15 +102,18 @@ const Fila = () => {
   const [flowOpen, setFlowOpen] = useState(false);
   const [authOnlyOpen, setAuthOnlyOpen] = useState(false);
   const [step, setStep] = useState<Step>("service");
-  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [selectedServices, setSelectedServices] = useState<Service[]>([]);
   const [selectedBarber, setSelectedBarber] = useState<Barber | null>(null);
   const [notes, setNotes] = useState("");
   const [joining, setJoining] = useState(false);
+  const [iosHintOpen, setIosHintOpen] = useState(false);
 
   // Auth form
   const [authMode, setAuthMode] = useState<AuthMode>("login");
   const [fName, setFName] = useState("");
   const [fSurname, setFSurname] = useState("");
+  const [fPhone, setFPhone] = useState("");
+  const [fPassword, setFPassword] = useState("");
   const [fPhone, setFPhone] = useState("");
   const [fPassword, setFPassword] = useState("");
   const [showPass, setShowPass] = useState(false);
