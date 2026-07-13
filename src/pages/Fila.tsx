@@ -844,12 +844,12 @@ const Fila = () => {
                 )}
                 {services.map((s) => (
                   <div key={s.id}
-                    className="flex items-center gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
+                    className="flex items-start gap-3 rounded-2xl p-4 border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-colors">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center border border-[#c69447]/25 bg-[#c69447]/[0.08] text-[#e5b877] shrink-0">
                       <Scissors className="w-4 h-4" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-semibold truncate">{s.title}</div>
+                      <div className="font-semibold break-words leading-snug">{s.title}</div>
                       {s.duration && (
                         <div className="text-[11px] text-white/45 mt-0.5 inline-flex items-center gap-1">
                           <Clock className="w-3 h-3" /> {s.duration}
@@ -857,7 +857,7 @@ const Fila = () => {
                       )}
                     </div>
                     <div className="text-right shrink-0">
-                      <div className="font-bold text-[#e5b877] tabular-nums">{money(s.price)}</div>
+                      <div className="font-bold text-[#e5b877] tabular-nums whitespace-nowrap">{money(s.price)}</div>
                     </div>
                   </div>
                 ))}
