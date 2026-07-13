@@ -102,6 +102,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <InstallPWA />
       <BrowserRouter>
         <ThemeProvider>
           <StoreThemeProvider>
