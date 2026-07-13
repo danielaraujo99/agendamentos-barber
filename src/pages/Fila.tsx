@@ -181,11 +181,21 @@ const Fila = () => {
   const isOpen = settings.site_status !== "inativo";
 
   // ---------- ETA / previsão automática ----------
-  // Match entry service_name (formato "Título · R$ x") ao service.title
-  const findServiceForEntry = (entry: Entry | null | undefined) => {
-    if (!entry?.service_name) return null;
+  // Prefere "Dur: NNmin" nas notes (multi-serviço); senão tenta casar service_name → duration do serviço
+  const findDurationMinutes = (entry: Entry | null | undefined): number => {
+    if (!entry) return 0;
+    const m = (entry.notes || "").match(/Dur:\s*(\d+)\s*min/i);
+    if (m) return parseInt(m[1], 10) || 0;
+    if (!entry.service_name) return 0;
     const head = entry.service_name.split("·")[0].trim().toLowerCase();
-    return services.find((s) => s.title.trim().toLowerCase() === head) || null;
+    // pode ter "A + B"; soma se casar múltiplos
+    const parts = head.split(/\s*\+\s*/);
+    let total = 0;
+    for (const p of parts) {
+      const svc = services.find((s) => s.title.trim().toLowerCase() === p);
+      total += parseMinutes(svc?.duration);
+    }
+    return total;
   };
 
   const activeInService = useMemo(
@@ -196,8 +206,7 @@ const Fila = () => {
   // Hora prevista do fim do atendimento atual (base para o contador do próximo)
   const nextStartAt = useMemo<number | null>(() => {
     if (!activeInService?.started_at) return null;
-    const svc = findServiceForEntry(activeInService);
-    const mins = parseMinutes(svc?.duration) || 30;
+    const mins = findDurationMinutes(activeInService) || 30;
     return new Date(activeInService.started_at).getTime() + mins * 60000;
   }, [activeInService, services]);
 
