@@ -25,6 +25,7 @@ const PERMISSION_GROUPS: { label: string; keys: { key: string; label: string }[]
     keys: [
       { key: "dashboard", label: "Dashboard" },
       { key: "appointments", label: "Agendamentos" },
+      { key: "fila", label: "Fila de espera" },
       { key: "commands", label: "Comandas" },
       { key: "cashier", label: "Caixa" },
       { key: "services", label: "Serviços" },
