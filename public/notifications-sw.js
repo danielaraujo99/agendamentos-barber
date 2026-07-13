@@ -1,6 +1,9 @@
 // Service worker: push background notifications + click handling
 self.addEventListener("install", () => { self.skipWaiting(); });
 self.addEventListener("activate", (event) => { event.waitUntil(self.clients.claim()); });
+// Minimal fetch listener (required for PWA installability criteria on Chrome).
+// Pass-through: never intercepts or caches — preserves app behavior 100%.
+self.addEventListener("fetch", () => { /* no-op, network handles request */ });
 
 // Fallback: mensagens do app (in-tab)
 self.addEventListener("message", (event) => {
