@@ -1,5 +1,6 @@
 const PWA_SW_PATH = "/notifications-sw.js";
 const LEGACY_APP_SW_PATHS = [PWA_SW_PATH, "/sw.js", "/service-worker.js"];
+let registrationPromise: Promise<ServiceWorkerRegistration | null> | null = null;
 
 const isLovablePreviewHost = (host: string) =>
   host.startsWith("id-preview--") ||
@@ -47,7 +48,8 @@ export const registerPwaServiceWorker = async () => {
     return null;
   }
 
-  return navigator.serviceWorker.register(PWA_SW_PATH, { scope: "/" });
+  registrationPromise ??= navigator.serviceWorker.register(PWA_SW_PATH, { scope: "/" });
+  return registrationPromise;
 };
 
 export const readyPwaServiceWorker = async () => {
