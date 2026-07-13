@@ -45,6 +45,7 @@ export function usePushNotifications(email: string | null | undefined) {
 
     readyPwaServiceWorker()
       .then((reg) => {
+        if (!reg) return;
         swReg.current = reg;
       })
       .catch((e) => console.error("SW register error:", e));
