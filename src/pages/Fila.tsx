@@ -663,24 +663,37 @@ const Fila = () => {
             subtitle={`Passo ${["service", "barber", "auth", "confirm"].filter((s) => (s !== "auth" || !userId) && (s !== "barber" || barbers.length > 0)).indexOf(step) + 1} de ${["service", "barber", "auth", "confirm"].filter((s) => (s !== "auth" || !userId) && (s !== "barber" || barbers.length > 0)).length}`}>
             {step === "service" && (
               <div className="space-y-2">
+                <div className="text-[11px] text-white/50 px-1 pb-1">
+                  Selecione um ou mais serviços.
+                </div>
                 {services.length === 0 && <div className="text-sm text-white/50 text-center py-8">Nenhum serviço cadastrado.</div>}
                 {services.map((s) => {
-                  const sel = selectedService?.id === s.id;
+                  const sel = selectedServices.some((x) => x.id === s.id);
                   return (
-                    <button key={s.id} onClick={() => setSelectedService(s)}
-                      className={`w-full text-left flex items-center gap-3 rounded-2xl p-4 border transition-all ${
-                        sel ? "border-amber-400/50 bg-amber-400/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
-                      <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${sel ? "border-amber-400/40 bg-amber-400/10 text-amber-300" : "border-white/10 bg-white/5 text-white/60"}`}>
-                        <Scissors className="w-4 h-4" />
+                    <button key={s.id} onClick={() => toggleService(s)}
+                      className={`w-full text-left flex items-start gap-3 rounded-2xl p-4 border transition-all ${
+                        sel ? "border-[#c69447]/50 bg-[#c69447]/[0.06]" : "border-white/10 bg-white/[0.02] hover:bg-white/[0.04]"}`}>
+                      <div className={`mt-0.5 w-5 h-5 rounded-md flex items-center justify-center border shrink-0 ${
+                        sel ? "border-[#c69447] bg-[#c69447] text-black" : "border-white/25 bg-white/5"}`}>
+                        {sel && <Check className="w-3.5 h-3.5" strokeWidth={3} />}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold truncate">{s.title}</div>
+                        <div className="font-semibold break-words leading-snug">{s.title}</div>
                         {s.duration && <div className="text-[11px] text-white/45 mt-0.5">{s.duration}</div>}
                       </div>
-                      <div className="font-bold text-amber-300 tabular-nums">{money(s.price)}</div>
+                      <div className="font-bold text-[#e5b877] tabular-nums shrink-0 whitespace-nowrap">{money(s.price)}</div>
                     </button>
                   );
                 })}
+                {selectedServices.length > 0 && (
+                  <div className="mt-3 rounded-2xl border border-[#c69447]/25 bg-[#c69447]/[0.05] px-4 py-3 flex items-center justify-between">
+                    <div className="text-xs text-white/70">
+                      <span className="font-bold text-white">{selectedServices.length}</span> selecionado{selectedServices.length > 1 ? "s" : ""}
+                      {totalDurationMin > 0 && <> · ~{totalDurationMin} min</>}
+                    </div>
+                    <div className="font-bold text-[#e5b877] tabular-nums">{money(totalPrice)}</div>
+                  </div>
+                )}
               </div>
             )}
             {step === "barber" && (
