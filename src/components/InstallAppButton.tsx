@@ -61,10 +61,11 @@ const InstallAppButton = () => {
   if (installed) return null;
 
   const doInstall = async () => {
-    if (deferred) {
+    const bip = deferred ?? window.__deferredInstallPrompt ?? null;
+    if (bip) {
       try {
-        await deferred.prompt();
-        const { outcome } = await deferred.userChoice;
+        await bip.prompt();
+        const { outcome } = await bip.userChoice;
         if (outcome === "accepted") {
           setInstalled(true);
           setOpen(false);
@@ -78,10 +79,33 @@ const InstallAppButton = () => {
     }
   };
 
+  const handleClick = async () => {
+    const bip = deferred ?? window.__deferredInstallPrompt ?? null;
+    if (bip) {
+      // Dispara o prompt nativo direto no clique — sem modal intermediário.
+      try {
+        await bip.prompt();
+        const { outcome } = await bip.userChoice;
+        if (outcome === "accepted") {
+          setInstalled(true);
+          return;
+        }
+      } catch {
+        /* cai pro modal com instruções */
+      } finally {
+        window.__deferredInstallPrompt = null;
+        setDeferred(null);
+      }
+      return;
+    }
+    // Sem prompt nativo (iOS/Firefox/Samsung/desktop sem critério PWA): mostra instruções.
+    setOpen(true);
+  };
+
   return (
     <>
       <button
-        onClick={() => setOpen(true)}
+        onClick={handleClick}
         className="inline-flex items-center gap-1.5 h-8 px-2.5 rounded-full text-[11px] font-semibold transition-all active:scale-95"
         style={{
           background: "linear-gradient(135deg, #c69447, #e5b877)",
