@@ -230,7 +230,7 @@ const App = () => (
               <Route path="/vilanova/login" element={<Navigate to="/" replace />} />
               <Route path="/vilanova/membro" element={<Navigate to="/" replace />} />
 
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </Suspense>
           </StoreThemeProvider>
