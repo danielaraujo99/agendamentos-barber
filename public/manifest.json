@@ -1,20 +1,38 @@
 {
-  "id": "/fila",
+  "id": "/",
   "name": "GenesisBarber — Barbearia Premium",
   "short_name": "GenesisBarber",
   "description": "Agende seu horário, entre na fila e acompanhe seu atendimento em tempo real.",
-  "start_url": "/fila",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
   "theme_color": "#111318",
   "background_color": "#111318",
   "lang": "pt-BR",
+  "dir": "ltr",
   "categories": ["lifestyle", "business"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Entrar na fila",
+      "short_name": "Fila",
+      "description": "Ver a fila e acompanhar seu atendimento",
+      "url": "/fila",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Agendar horário",
+      "short_name": "Agendar",
+      "description": "Agende um novo horário",
+      "url": "/agendar",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
   ]
 }

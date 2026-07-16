@@ -55,7 +55,10 @@ const InstallAppButton = () => {
     };
   }, [installed]);
 
-  if (installed || !deferred) return null;
+  // Mostra o botão sempre que o app ainda não estiver instalado.
+  // No iOS/Firefox/Samsung o `beforeinstallprompt` nunca dispara — nesses casos
+  // o modal exibe instruções manuais em vez do prompt nativo.
+  if (installed) return null;
 
   const doInstall = async () => {
     if (deferred) {

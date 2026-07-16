@@ -1,64 +1,120 @@
-## O que está quebrado hoje
+# Plano: PWA funcional e universal
 
-1. **Configurações não aplicam na loja** — o admin (`StoreSettings.tsx`) salva tudo na tabela `store_settings` com chaves `store_*` (ex.: `store_pix_key`, `store_whatsapp_number`, `store_pix_type`), mas a `StorePage.tsx` lê de `business_settings` com chaves antigas (`pix_key`, `whatsapp_number`, `pix_type`). Resultado: nada do que se ativa no admin aparece na loja.
-2. **Não existe toggle "Loja ativa" nem "Modo de pedido"** dentro do novo `StoreSettings.tsx`, então o lojista não consegue ligar/desligar a vitrine ou alternar iFood/WhatsApp pelo admin próprio.
-3. **Tema não reflete na loja** quando trocado — `StoreThemeContext` aplica o atributo só em `/loja*`, ok, mas só existe `default` e `pink-dark`. Não há tema claro Rosa, e vários componentes da loja ainda usam cores cruas em vez de `--store-accent*`.
-4. **Campos do formulário desalinhados** — quando um campo é `cols: 2` (textarea, switch, segmented), o grid de 2 colunas força altura desigual e o switch/segmented ocupam meia linha quebrando o layout. Inputs com prefixo (`R$`) têm padding inconsistente.
-5. **Modo claro global da loja** — hoje a página da loja só funciona bonita no dark; precisa suportar tema claro com cards/botões/modais 100% via tokens.
+## Objetivo
+Deixar o app instalável em Android, iOS 16.4+, Windows, macOS e Linux, com ícone próprio, splash screen, tela cheia (standalone) e suporte a Web Push em background — **sem alterar design, componentes ou lógica de negócio**, e sem quebrar o preview do Lovable.
 
-## Plano
+## Escopo do que muda
+Apenas arquivos de infraestrutura PWA. Nenhuma tela, cor, fonte, componente ou fluxo de fila/atendimento é tocado.
 
-### 1. Unificar fonte das configurações da loja (`store_settings`)
-- Em `StorePage.tsx`, `CheckoutModal.tsx` e demais consumidores, ler tudo de `store_settings` com as novas chaves: `store_enabled`, `store_order_mode`, `store_whatsapp_number`, `store_pix_key`, `store_pix_type`, `store_business_name`, `store_address`, `store_open_hours`, `store_phone`, `store_delivery_*`, `store_min_order`, `store_free_shipping_above`.
-- Manter fallback para as chaves antigas em `business_settings` apenas se a nova vier vazia (compatibilidade com lojas existentes).
-- Adicionar canal Realtime `store_settings` na `StorePage` para refletir mudanças do admin sem reload (igual já feito no theme).
+## Etapas
 
-### 2. Completar `StoreSettings.tsx` (admin)
-- Adicionar seção **"Geral"** os campos faltando: `store_enabled` (switch destacado no topo) e `store_order_mode` (segmented iFood ↔ WhatsApp).
-- Corrigir alinhamento do form:
-  - Trocar grid `sm:grid-cols-2` por grid responsivo onde cada `Field` controla seu próprio `colSpan` e altura.
-  - Switch e Segmented sempre ocupam linha cheia (`cols: 2`) com altura própria (`min-h-[64px]`) para não quebrarem com inputs ao lado.
-  - Padronizar input com prefix/suffix (altura 44px, padding 0.875rem; prefix dentro de span absoluto alinhado).
-- Header sticky com sombra leve quando rola.
+### 1. Auditoria do que já existe
+Já existem no projeto: `public/manifest.json`, `public/push-handlers.js`, `src/lib/pwa.ts`, `src/hooks/useWebPush.ts`, `send-push` edge function e `InstallAppButton`. Vou revisar cada um e consolidar, removendo duplicidades e conflitos (ex.: dois service workers registrados ao mesmo tempo).
 
-### 3. Sistema de temas — adicionar **Rosa Light**
-- Em `StoreThemeContext.tsx`:
-  - Novo tipo `StoreThemeName = "default" | "pink-dark" | "pink-light"`.
-  - Quando `pink-light`, aplicar `data-store-theme="pink-light"` **e** classe `light-theme` no `<html>` (escopadas a `/loja*`); ao sair de `/loja`, remover ambos para não vazar para o site da barbearia.
-  - Atualizar `ACCENTS` com tom rosa claro suave.
-- Em `index.css`:
-  - Adicionar bloco `:root[data-store-theme="pink-light"]` com `--store-accent` (rosa) + sobrescrita de tokens base (`--background`, `--foreground`, `--card`, `--muted`, `--border`, `--popover`, `--sidebar-*`, `--glass*`) com paleta clara rosada.
-  - Garantir que `--store-accent-soft` e `--store-accent-border` funcionem nos dois temas claros/escuros.
+### 2. Manifest completo e correto
+Reescrever `public/manifest.json` com:
+- `name`, `short_name`, `description`, `lang: pt-BR`
+- `display: "standalone"`, `orientation: "portrait"`, `theme_color`, `background_color` alinhados ao tema atual
+- `start_url: "/"`, `scope: "/"`, `id: "/"`
+- Ícones 192, 384, 512 + **maskable** (Android adaptive icon)
+- `screenshots` (form_factor wide + narrow) para install prompt rico
+- `shortcuts` para "Fila" e "Agendar"
 
-### 4. Adaptar a loja inteira aos tokens
-Substituir cores cruas por `hsl(var(--store-accent*))` / `hsl(var(--card))` / `hsl(var(--background))` em:
-- `StorePage.tsx` (hero, chips, badges, faixas de preço, botão "Adicionar")
-- `ProductCard.tsx`
-- `CartDrawer.tsx`
-- `CheckoutModal.tsx`
-- `ProductDetailModal.tsx`
-- `StoreAccountModal.tsx`, `AccountInline.tsx`
-- `OrderTracker.tsx`, `AuthRequiredModal.tsx`, `PromoModal.tsx`, `StoreConfigModal.tsx`
-- `Footer` da loja
+### 3. Ícones e Apple touch icons
+Gerar/validar em `public/`:
+- `icon-192.png`, `icon-384.png`, `icon-512.png`, `icon-maskable-512.png`
+- `apple-touch-icon.png` (180x180) — iOS não lê manifest para ícone
+- `favicon.ico`, `favicon.svg`
 
-Onde for necessário usar `useThemeColors`, validar que ele responde ao `light-theme` global; manter accent vindo de `useStoreTheme().accent`.
+### 4. Meta tags no `index.html`
+Adicionar no `<head>` (sem tocar em nada visual):
+- `<link rel="manifest">`
+- `<meta name="theme-color">` (light + dark)
+- `<link rel="apple-touch-icon">`
+- `<meta name="apple-mobile-web-app-capable" content="yes">`
+- `<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">`
+- `<meta name="apple-mobile-web-app-title">`
+- `<meta name="mobile-web-app-capable" content="yes">`
+- Open Graph e Twitter Card já corretos
 
-### 5. Painel "Visual & Tema"
-- Mostrar 3 cartões: Indigo (padrão), Rosa Dark, **Rosa Light** — cada um com paleta de 4 swatches e badge "Ativo".
-- Preview "Como vai ficar na loja" mini (botão + card) usando os tokens correntes para o lojista validar antes de salvar.
+### 5. Service Worker único e seguro
+Estratégia: **um único SW** em `/sw.js` responsável por:
+- Cache do app shell (NetworkFirst para HTML, CacheFirst para assets hasheados)
+- Recebimento de Web Push (evento `push` + `notificationclick`)
+- Auto-update (`skipWaiting` + `clients.claim`)
+- Exclusão explícita de `/~oauth`, edge functions e chamadas Supabase
 
-### 6. Garantir reatividade real
-- `StoreThemeContext` já tem Realtime no `key=store_theme`. Adicionar Realtime análogo em `StorePage` filtrando por chaves de exibição (`store_enabled`, `store_order_mode`, `store_business_name`, promo modal etc.), revalidando o estado local.
+Uso do `vite-plugin-pwa` com `generateSW` para gerar tudo automaticamente.
 
-## Arquivos afetados
-- `src/contexts/StoreThemeContext.tsx`
-- `src/index.css`
-- `src/pages/store-admin/StoreSettings.tsx`
-- `src/pages/StorePage.tsx`
-- `src/components/store/PromoModal.tsx`, `CheckoutModal.tsx`, `CartDrawer.tsx`, `ProductDetailModal.tsx`, `StoreAccountModal.tsx`, `AccountInline.tsx`, `OrderTracker.tsx`, `AuthRequiredModal.tsx`, `StoreConfigModal.tsx`
-- `src/components/ProductCard.tsx` (escopado a uso na loja)
+### 6. Guards de registro (crítico para não quebrar preview Lovable)
+Wrapper único de registro que **recusa** registrar quando:
+- `!import.meta.env.PROD`
+- Está dentro de iframe
+- Hostname começa com `id-preview--` ou `preview--`
+- Hostname termina em `.lovableproject.com`, `.lovable.app` de preview, `.lovableproject-dev.com`
+- URL tem `?sw=off` (kill switch manual)
 
-## Observações
-- Sem migração de banco — só leitura/escrita em chaves novas já existentes em `store_settings`.
-- Nenhuma mudança no admin da barbearia ou no tema global do site principal.
-- Compatibilidade preservada: fallback para `business_settings` quando `store_settings` está vazio.
+Em qualquer contexto recusado: faz `unregister()` de SWs antigos para limpar cache poluído.
+
+### 7. Kill-switch para instalações antigas
+Manter um handler que, ao detectar SW obsoleto, faz `unregister` + limpa caches próprios (sem tocar em caches de outros workers como o de push).
+
+### 8. Web Push em background (já parcialmente pronto)
+- Consolidar `push-handlers.js` dentro do SW principal (evita 2 SWs concorrentes)
+- Manter `send-push` edge function (VAPID) já existente
+- Fluxo: usuário aceita → salva subscription em `push_subscriptions` → edge function envia no evento da fila
+- Suporte a `requireInteraction: true`, `vibrate`, `badge`, `actions` (Abrir/Dispensar)
+
+### 9. iOS 16.4+ específico
+- Só funciona push **após** instalar PWA (Adicionar à Tela de Início)
+- Detectar iOS + Safari + não-standalone → mostrar tooltip discreto explicando o passo (usando o `InstallAppButton` já existente, sem redesign)
+
+### 10. Botão de instalação (já existe)
+Revisar `InstallAppButton.tsx` apenas para:
+- Capturar `beforeinstallprompt` corretamente
+- Mostrar instruções nativas iOS
+- Esconder quando já instalado (`display-mode: standalone`)
+- **Zero mudança visual**
+
+### 11. Validação
+- Lighthouse PWA audit ≥ 90
+- Chrome DevTools → Application → Manifest sem erros
+- Testar install: Chrome desktop, Chrome Android, Safari iOS 16.4+
+- Testar push: enviar via `send-push`, verificar chegada com app fechado
+- Testar preview Lovable: garantir que SW **não** registra e não polui
+
+## Detalhes técnicos
+
+**Arquivos que serão criados/alterados:**
+```text
+public/manifest.json          (reescrito)
+public/icon-192.png           (novo/verificado)
+public/icon-512.png           (verificado)
+public/icon-maskable-512.png  (novo)
+public/apple-touch-icon.png   (novo)
+index.html                    (só <head>, meta tags PWA)
+vite.config.ts                (config vite-plugin-pwa)
+src/lib/pwa.ts                (wrapper de registro com guards)
+src/main.tsx                  (chamar registro do wrapper)
+public/push-handlers.js       (mesclado ao SW gerado ou mantido separado só p/ push)
+```
+
+**Arquivos que NÃO serão tocados:**
+- Nenhum componente de UI (exceto ajuste mínimo no `InstallAppButton` já pedido)
+- Nenhuma página, rota, hook de negócio
+- `src/index.css`, tema, cores, fontes
+- Edge functions da fila, agenda, WhatsApp
+- Schema do banco
+
+**Riscos mitigados:**
+- SW quebrando preview Lovable → guards de hostname + `?sw=off`
+- Cache antigo em usuário já instalado → kill-switch worker no mesmo path
+- Dois SWs concorrentes (push + shell) → unificação em um só
+- iOS sem push → detecção + orientação de instalação
+
+## Resultado esperado
+- Instalável em Android/iOS/Desktop com ícone e splash corretos
+- Abre em standalone (sem barra do browser)
+- Push funciona com app fechado (Android imediato, iOS após instalar)
+- Preview do Lovable continua funcionando normalmente
+- Zero regressão visual ou funcional
