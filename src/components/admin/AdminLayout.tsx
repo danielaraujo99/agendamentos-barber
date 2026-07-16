@@ -210,18 +210,45 @@ const AdminLayout = () => {
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto overscroll-contain scrollbar-hidden pb-6">
-          {visibleNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
-                style={isActive ? { background: 'hsl(245 60% 55% / 0.1)', border: '1px solid hsl(245 60% 55% / 0.15)' } : { border: '1px solid transparent' }}>
-                <item.icon className="w-4 h-4" />
-                {item.label}
-                {isActive && <ChevronRight className="w-3 h-3 ml-auto" style={{ color: 'hsl(245 60% 65%)' }} />}
-              </Link>
-            );
-          })}
+          {(() => {
+            const ALLOWED = new Set<string>([
+              "/admin/fila",
+              "/admin/appointments",
+              "/admin/settings",
+              "/admin/finance",
+              "/admin/inventory",
+              "/admin/barbers",
+              "/admin/services",
+              "/admin/reviews",
+            ]);
+            return visibleNavItems.map((item) => {
+              const isActive = location.pathname === item.path;
+              const isAllowed = ALLOWED.has(item.path);
+              if (!isAllowed) {
+                return (
+                  <div
+                    key={item.path}
+                    aria-disabled="true"
+                    title="Indisponível"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground opacity-30 cursor-not-allowed select-none"
+                    style={{ border: "1px solid transparent" }}
+                  >
+                    <item.icon className="w-4 h-4" />
+                    {item.label}
+                  </div>
+                );
+              }
+              return (
+                <Link key={item.path} to={item.path} onClick={() => setSidebarOpen(false)}
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-200 ${isActive ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}
+                  style={isActive ? { background: 'hsl(245 60% 55% / 0.1)', border: '1px solid hsl(245 60% 55% / 0.15)' } : { border: '1px solid transparent' }}>
+                  <item.icon className="w-4 h-4" />
+                  {item.label}
+                  {isActive && <ChevronRight className="w-3 h-3 ml-auto" style={{ color: 'hsl(245 60% 65%)' }} />}
+                </Link>
+              );
+            });
+          })()}
         </nav>
 
         <div className="p-3" style={{ borderTop: `1px solid ${t.border}` }}>
