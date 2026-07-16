@@ -194,16 +194,10 @@ const App = () => (
               </Route>
 
               <Route element={<HostnameResolver mode="wrapper" />}>
-                <Route element={<LoginRedirectGuard />}>
-                  <Route path="/login" element={<MemberLogin />} />
-                </Route>
-
-                <Route element={<MemberRouteGuard />}>
-                  <Route path="/membro" element={<MemberArea />} />
-                  <Route path="/membro/notificacoes" element={<NotificationsPage />} />
-                </Route>
-
-                <Route path="/baixar-source" element={<BaixarSource />} />
+                <Route path="/login" element={<Navigate to="/" replace />} />
+                <Route path="/membro" element={<Navigate to="/" replace />} />
+                <Route path="/membro/notificacoes" element={<Navigate to="/" replace />} />
+                <Route path="/baixar-source" element={<Navigate to="/" replace />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<Dashboard />} />
@@ -231,10 +225,10 @@ const App = () => (
                 </Route>
               </Route>
 
-              {/* Legacy redirects */}
-              <Route path="/vilanova" element={<VilaNova />} />
-              <Route path="/vilanova/login" element={<MemberLogin />} />
-              <Route path="/vilanova/membro" element={<MemberArea />} />
+              {/* Legacy redirects — bloqueados, vão para a fila */}
+              <Route path="/vilanova" element={<Navigate to="/" replace />} />
+              <Route path="/vilanova/login" element={<Navigate to="/" replace />} />
+              <Route path="/vilanova/membro" element={<Navigate to="/" replace />} />
 
               <Route path="*" element={<NotFound />} />
             </Routes>
