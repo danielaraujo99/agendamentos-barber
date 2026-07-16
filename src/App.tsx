@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { StoreThemeProvider } from "@/contexts/StoreThemeContext";
 import { lazy, Suspense } from "react";
@@ -106,8 +106,14 @@ const App = () => (
           <StoreThemeProvider>
           <Suspense fallback={<PageLoader />}>
             <Routes>
-              {/* Main site (eager) */}
-              <Route path="/" element={<HostnameResolver fallback={<VilaNova />} />} />
+              {/* Fila agora é a home */}
+              <Route path="/" element={<HostnameResolver mode="wrapper" />}>
+                <Route index element={<Fila />} />
+                <Route path="fila" element={<Fila />} />
+              </Route>
+
+              {/* Site comercial (antiga home) movido para /comercial */}
+              <Route path="/comercial" element={<HostnameResolver fallback={<VilaNova />} />} />
 
               {/* Site comercial LyneCloud — sempre global, ignora tenant */}
               <Route path="/lynecloud" element={<LyneCloud />} />
@@ -118,15 +124,15 @@ const App = () => (
               <Route path="/portifolio/preview/membro" element={<MemberPreviewDemo />} />
               <Route path="/portfolio/preview/membro" element={<MemberPreviewDemo />} />
 
+              {/* Rotas públicas antigas bloqueadas — redirecionam para a fila */}
               <Route element={<HostnameResolver mode="wrapper" />}>
-                <Route path="/agenda" element={<Index />} />
-                <Route path="/agenda-direto" element={<AgendaDireto />} />
-                <Route path="/loja" element={<StorePage />} />
-                <Route path="/fila" element={<Fila />} />
-                <Route path="/navegacao" element={<Navigation />} />
-                <Route path="/demo-site" element={<DemoSite />} />
-                <Route path="/avaliacao" element={<Avaliacao />} />
-                <Route path="/avaliar-pedido/:token" element={<AvaliarPedido />} />
+                <Route path="/agenda" element={<Navigate to="/" replace />} />
+                <Route path="/agenda-direto" element={<Navigate to="/" replace />} />
+                <Route path="/loja" element={<Navigate to="/" replace />} />
+                <Route path="/navegacao" element={<Navigate to="/" replace />} />
+                <Route path="/demo-site" element={<Navigate to="/" replace />} />
+                <Route path="/avaliacao" element={<Navigate to="/" replace />} />
+                <Route path="/avaliar-pedido/:token" element={<Navigate to="/" replace />} />
               </Route>
 
               {/* Loja Admin (totalmente separado do admin de barbearia) */}
