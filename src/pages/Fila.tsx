@@ -410,8 +410,27 @@ const Fila = () => {
           </div>
           {bizDesc && <p className="mt-3 text-sm text-white/70 max-w-md mx-auto leading-relaxed">{bizDesc}</p>}
           {insta && (
-            <a href={`https://instagram.com/${insta}`} target="_blank" rel="noreferrer"
-              className="mt-4 inline-flex items-center gap-2 h-10 px-5 rounded-xl border border-white/10 bg-black/40 hover:bg-black/60 text-sm font-medium text-white/90 transition-colors">
+            <a
+              href={`https://instagram.com/${insta}`}
+              target="_blank"
+              rel="noreferrer"
+              className="group relative mt-4 inline-flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-semibold text-white transition-transform hover:scale-[1.03] active:scale-[0.98]"
+              style={{
+                background:
+                  "linear-gradient(135deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%)",
+                boxShadow:
+                  "0 0 12px rgba(214,41,118,0.55), 0 0 28px rgba(150,47,191,0.45), 0 0 48px rgba(79,91,213,0.35)",
+              }}
+            >
+              <span
+                aria-hidden
+                className="pointer-events-none absolute -inset-[2px] rounded-[14px] opacity-70 blur-md transition-opacity group-hover:opacity-100"
+                style={{
+                  background:
+                    "linear-gradient(135deg, #feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5)",
+                  zIndex: -1,
+                }}
+              />
               <Instagram className="w-4 h-4" /> Instagram
             </a>
           )}
